@@ -35,6 +35,7 @@ def lex():
         while 1:
             line = file.readline()
             if len(line) == 0:
+                # TODO: last dedent
                 break
             elif line.isspace():
                 continue
@@ -57,7 +58,8 @@ def lex():
                 lines[-1] += ';'
                 while current_indent < indent_stack[-1]:
                     if indent_type[indent_stack[-1]] == -1:
-                        if 'fall' in line[-1]:
+                        if 'fallthrough' in line[-1]:
+                            # TODO: fallthrough
                             line[-1] = line[-1].replace('fall', '')
                         elif 'case' in line or 'default' in line:
                             lines[-1] += ' break;'
@@ -72,6 +74,7 @@ def lex():
                     indent_stack.pop()
             elif 'switch' in lines[-1]:
                 lines[-1] = lines[-1].replace(':', '') + ' {'
+            # TODO: backslashed line and true lexer
             # elif line[-1] == '\\':  # backslashed line
                 # line = line[:-1] + file.readline()
             elif line:
