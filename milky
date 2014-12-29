@@ -1,0 +1,109 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+# This module is in the public domain.  No warranties.
+'''Usage: milky filename.mk
+Milky the Indentation-based Language liKe pYthon, yet a C preprocessor.'''
+
+__author__  = 'Arnie97 <me@arnie97.progr.am>'
+__version__ = '0.1.0-build20141228'
+
+
+import sys
+import re
+from subprocess import *
+from pprint import pprint
+
+lines = ['']
+indent_level = [0]
+tokens = (
+    'if', 'else', 'elif',
+    'while', 'until', 'for',
+    'switch', 'def'
+)
+
+
+def indent(line):
+    line = line.expandtabs()
+    return len(line) - len(line.lstrip())
+
+
+def lex():
+    with open(filename) as file:
+        last_indent = until = case = 0
+        line = __author__
+        while 1:
+            line = file.readline()
+            if len(line) == 0:
+                break
+            elif line.isspace():
+                continue
+            else:
+                line = line[:-1]
+            current_indent = indent(line)
+            if current_indent > last_indent:  # indent
+                if 'case' in lines[-1] or 'default' in lines[-1]:
+                    case = 1
+                elif 'until' in lines[-1]:
+                    until = lines[-1].strip().replace('until', 'while (')
+                    lines[-1] = ' ' * last_indent + 'do {'
+                else:
+                    lines[-1] = lines[-1].replace(':', '') + ' {'
+                # for token in tokens:
+                #     re.search(r'\W%s\W' % token, lines[-1])
+            elif current_indent < last_indent:  # dedent
+                lines[-1] += ';'
+                if case:
+                    if 'fall' in line[-1]:
+                        line[-1] = line[-1].replace('fall', '')
+                    elif 'case' in line or 'default' in line:
+                        lines[-1] += ' break;'
+                    else:
+                        lines[-1] += ' }'
+                    case = 0
+                elif until:
+                    lines[-1] += ' } ' + until + ');'
+                    until = 0
+                else:
+                    lines[-1] += ' }'
+            elif 'switch' in lines[-1]:
+                lines[-1] = lines[-1].replace(':', '') + ' {'
+            # elif line[-1] == '\\':  # backslashed line
+                # line = line[:-1] + file.readline()
+            elif line:
+                lines[-1] += ';'
+            lines.append(line)
+            last_indent = current_indent
+
+
+def parser():
+    lines.pop(0)
+    print('\n'.join(lines))
+
+
+def wait_for(timeout=None):
+    'Closure for a non-blocking timer. Accepts 0 which means never expires.'
+    if timeout:
+        timeout = monotonic() + timeout
+        return lambda: monotonic() > timeout
+    else:
+        return lambda: False
+
+
+if __name__ != '__main__':
+    try:
+        argv = sys.argv[1].lower()
+        if argv in ('-i', '--interrupt'):
+            pass
+        elif argv in ('-?', '--help', '/?'):
+            sys.stdout.write(__doc__)
+        elif argv:
+            raise IndexError
+    except IndexError:
+        sys.stdout.write('Illegal Arguments.\n%s\n' % __doc__)
+    except KeyboardInterrupt:
+        sys.exit(0)
+
+filename = 'foobar.mk'
+lex()
+parser()
