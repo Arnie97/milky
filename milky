@@ -6,7 +6,7 @@
 Milky the Indentation-based Language liKe pYthon, yet a C preprocessor.'''
 
 __author__  = 'Arnie97 <me@arnie97.progr.am>'
-__version__ = '0.1.0-build20141228'
+__version__ = '0.1.2-build20150109'
 
 
 import sys
@@ -25,18 +25,21 @@ tokens = (
 
 
 def indent(line):
+    'Calculate indent of specified line.'
     line = line.expandtabs()
     return len(line) - len(line.lstrip())
 
 
 def lex():
+    'Generate C-style blocks with line numbers kept.'
     with open(filename) as file:
-        line = __author__
+        line, quit = __author__, False
         while 1:
             line = file.readline()
-            if len(line) == 0:
-                # TODO: last dedent
+            if quit:
                 break
+            elif len(line) == 0:
+                quit = True
             elif line.isspace():
                 continue
             else:
@@ -51,6 +54,7 @@ def lex():
                     indent_type[current_indent] = lines[-1].strip().replace('until', 'while (')
                     lines[-1] = ' ' * indent_stack[-1] + 'do {'
                 else:
+                    # TODO: add parenthesis before block statements
                     lines[-1] = lines[-1].replace(':', '') + ' {'
                 # for token in tokens:
                 #     re.search(r'\W%s\W' % token, lines[-1])
@@ -110,6 +114,6 @@ if __name__ != '__main__':
     except KeyboardInterrupt:
         sys.exit(0)
 
-filename = 'foobar.mk'
+filename = 'foobar.milk'
 lex()
 parser()
