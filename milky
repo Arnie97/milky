@@ -17,11 +17,13 @@ from pprint import pprint
 lines = ['']
 indent_stack = [0]
 indent_type = {}
-tokens = (
-    'if', 'else', 'elif',
-    'while', 'until', 'for',
-    'switch', 'def'
-)
+tokens = {
+    'if': 'if (',
+    'elif': 'else if (',
+    'while': 'while (',
+    'for': 'for (',
+    'switch': 'switch ('
+}
 
 
 def indent(line):
@@ -51,13 +53,14 @@ def lex():
                 if 'case' in lines[-1] or 'default' in lines[-1]:
                     indent_type[current_indent] = -1
                 elif 'until' in lines[-1]:
-                    indent_type[current_indent] = lines[-1].strip().replace('until', 'while (')
-                    lines[-1] = ' ' * indent_stack[-1] + 'do {'
-                else:
-                    # TODO: add parenthesis before block statements
-                    lines[-1] = lines[-1].replace(':', '') + ' {'
-                # for token in tokens:
-                #     re.search(r'\W%s\W' % token, lines[-1])
+                    indent_type[current_indent] = re.sub(r'until(.+?):', '} while (\g<1> );', lines[-1].strip())
+                    lines[-1] = ' ' * indent_stack[-2] + 'do {'
+                elif 'else' in lines[-1]:
+                    lines[-1] = lines[-1].replace(':', ' {')
+                else:  # parenthesis before block statements
+                    lines[-1] = lines[-1].replace(':', ' ) {')
+                    for token in tokens:
+                        lines[-1] = re.sub(r'(?<!\w)%s(?!\w)' % token, tokens[token], lines[-1])
             elif current_indent < indent_stack[-1]:  # dedent
                 if lines[-1].lstrip()[0] != '#' and lines[-1].lstrip():
                     lines[-1] += ';'
@@ -67,18 +70,21 @@ def lex():
                             # TODO: fallthrough
                             line[-1] = line[-1].replace('fall', '')
                         elif 'case' in line or 'default' in line:
+                            # TODO: multiple cases in same line
                             lines[-1] += ' break;'
                         else:
                             lines[-1] += ' }'
                         indent_type[indent_stack[-1]] = 0
                     elif indent_type[indent_stack[-1]]:  # until
-                        lines[-1] += ' } ' + indent_type[indent_stack[-1]] + ');'
+                        lines[-1] += indent_type[indent_stack[-1]]
                         indent_type[indent_stack[-1]] = 0
                     else:
                         lines[-1] += ' }'
                     indent_stack.pop()
             elif 'switch' in lines[-1]:
-                lines[-1] = lines[-1].replace(':', '') + ' {'
+                lines[-1] = lines[-1].replace(':', '') + ' ) {'
+                for token in tokens:
+                    lines[-1] = re.sub(r'(?<!\w)%s(?!\w)' % token, token + ' (', lines[-1])
             # TODO: backslashed line and true lexer
             # elif line[-1] == '\\':  # backslashed line
                 # line = line[:-1] + file.readline()
