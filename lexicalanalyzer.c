@@ -54,7 +54,10 @@ get_token(Token *token)
                 st_line_pos++;
                 return;
             }
-            printf("SP^\n");
+            if (status == BEGIN_OF_LINE) { // Warning: If statement with assignment
+                // Test if indent or dedent.
+            }
+            token->str[pos_in_token++] = current_char;
             st_line_pos++;
             continue;
         }
