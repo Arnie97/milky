@@ -48,7 +48,7 @@ get_token(Token *token)
                     token->str[pos_in_token] = '\0';
                     st_line_pos++;
                     printf("2");
-                    continue;
+                    return;
                 }
                 if (status == IN_BLOCK_COMMENT) {
                     token->str[pos_in_token++] = current_char;
@@ -108,7 +108,11 @@ get_token(Token *token)
                 continue;
             }
         }
-
+        if (status == IN_LINE_COMMENT) {
+            token->str[pos_in_token++] = current_char;
+            st_line_pos++;
+            continue;
+        }
         if (pos_in_token >= MAX_TOKEN_SIZE-1) {
             fprintf(stderr, "token too long.\n");
             exit(1);
@@ -197,15 +201,17 @@ parse_line(void)
     for (;;) {
         int prev_pos = st_line_pos;
         get_token(&token);
-        if (token.kind == SHARP_TOKEN) {
-            break;
-        }
         printf("st_line_pos..%d->%d....kind..%d....str..%s",
             prev_pos, st_line_pos, token.kind, token.str);
         getchar();
+        if (token.kind == SHARP_TOKEN) {
+            break;
+        }
     }
 }
+#endif
 
+#if 1
 int
 main(int argc, char **argv)
 {
