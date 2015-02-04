@@ -22,32 +22,24 @@ get_token(Token *token)
     int pos_in_token = 0;
     static LexerStatus status = INITIAL_STATUS;
     char last_char, current_char = '\0';
-
     token->kind = BAD_TOKEN;
+
     while (st_line[st_line_pos] != '\0') {
         last_char = st_line[st_line_pos - 1];
         current_char = st_line[st_line_pos];
-        
-        if (status == IN_BLOCK_COMMENT) {
-            token->str[pos_in_token++] = current_char;
-            st_line_pos++;
-            if (last_char == '*' && current_char == '/') {
-                status = INITIAL_STATUS;
-                token->kind = COMMENT_TOKEN;
-                token->str[pos_in_token] = '\0';
-                return;
-            }
-            continue;
+
+        if (pos_in_token >= MAX_TOKEN_SIZE) {
+            fprintf(stderr, "Token too long.\n");
+            exit(1);
         }
         if (isspace(current_char)) {
             if (current_char == '\n') {
-                if (status == IN_LINE_COMMENT) {
+                if (status == IN_LINE_COMMENT) { // Should return a separate EOL instead, modify :96
                     status = INITIAL_STATUS;
                     token->kind = COMMENT_TOKEN;
                     token->str[pos_in_token++] = current_char;
                     token->str[pos_in_token] = '\0';
                     st_line_pos++;
-                    printf("2");
                     return;
                 }
                 if (status == IN_BLOCK_COMMENT) {
@@ -67,44 +59,38 @@ get_token(Token *token)
             continue;
         }
         if (status == IN_CHAR_LITERAL) {
+            token->str[pos_in_token++] = current_char;
+            st_line_pos++;
             if (last_char != '\\' && current_char == '\'') {
                 status = INITIAL_STATUS;
                 token->kind = CHAR_TOKEN;
-                token->str[pos_in_token++] = current_char;
                 token->str[pos_in_token] = '\0';
-                st_line_pos++;
                 return;
             } else {
-                token->str[pos_in_token++] = current_char;
-                st_line_pos++;
                 continue;
             }
         }
         if (status == IN_STRING_LITERAL) {
+            token->str[pos_in_token++] = current_char;
+            st_line_pos++;
             if (last_char != '\\' && current_char == '"') {
                 status = INITIAL_STATUS;
                 token->kind = STRING_TOKEN;
-                token->str[pos_in_token++] = current_char;
                 token->str[pos_in_token] = '\0';
-                st_line_pos++;
                 return;
             } else {
-                token->str[pos_in_token++] = current_char;
-                st_line_pos++;
                 continue;
             }
         }
         if (status == IN_BLOCK_COMMENT) {
+            token->str[pos_in_token++] = current_char;
+            st_line_pos++;
             if (last_char == '*' && current_char == '/') {
                 status = INITIAL_STATUS;
                 token->kind = COMMENT_TOKEN;
-                token->str[pos_in_token++] = current_char;
                 token->str[pos_in_token] = '\0';
-                st_line_pos++;
                 return;
             } else {
-                token->str[pos_in_token++] = current_char;
-                st_line_pos++;
                 continue;
             }
         }
@@ -112,10 +98,6 @@ get_token(Token *token)
             token->str[pos_in_token++] = current_char;
             st_line_pos++;
             continue;
-        }
-        if (pos_in_token >= MAX_TOKEN_SIZE-1) {
-            fprintf(stderr, "token too long.\n");
-            exit(1);
         }
         
         if (last_char == '/') {
@@ -153,30 +135,34 @@ get_token(Token *token)
             continue;
         }
 
-        if (current_char == '-') {
+        switch (current_char) {
+        case '+':
+        case '-':
+        case '*':
+        case '/':
             token->kind = OPERATOR_TOKEN;
-        } else if (current_char == '*') {
-            token->kind = OPERATOR_TOKEN;
-        } else if (current_char == '/') {
-            token->kind = OPERATOR_TOKEN;
-        } else if (current_char == '(') {
+            break;
+        case '(':
             token->kind = LEFT_PAREN_TOKEN;
-        } else if (current_char == ')') {
+            break;
+        case ')':
             token->kind = RIGHT_PAREN_TOKEN;
-        } else if (current_char == '\'') {
+            break;
+        case '\'':
             status = IN_CHAR_LITERAL;
             token->str[pos_in_token++] = current_char;
             printf("CHR^\n");
             st_line_pos++;
             continue;
-        } else if (current_char == '\"') {
+        case '\"':
             status = IN_STRING_LITERAL;
             token->str[pos_in_token++] = current_char;
             printf("STR^\n");
             st_line_pos++;
             continue;
-        } else if (current_char == '#') {
+        case '#':
             token->kind = SHARP_TOKEN;
+            break;
         }
         token->str[pos_in_token++] = current_char;
         st_line_pos++;
