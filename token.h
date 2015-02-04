@@ -4,21 +4,24 @@
 typedef enum {
     BAD_TOKEN,
     NUMBER_TOKEN,
-    ADD_OPERATOR_TOKEN,
-    SUB_OPERATOR_TOKEN,
-    MUL_OPERATOR_TOKEN,
-    DIV_OPERATOR_TOKEN,
+    STRING_TOKEN,
+    CHAR_TOKEN,
+    OPERATOR_TOKEN,
     LEFT_PAREN_TOKEN,
     RIGHT_PAREN_TOKEN,
-    END_OF_LINE_TOKEN
+    END_OF_LINE_TOKEN,
+    INDENT_TOKEN,
+    DEDENT_TOKEN,
+    SHARP_TOKEN,
+    COMMENT_TOKEN
 } TokenKind;
 
 #define MAX_TOKEN_SIZE (100)
+#define LINE_BUF_SIZE (1000)
 
 typedef struct {
     TokenKind kind;
-    double      value;
-    char        str[MAX_TOKEN_SIZE];
+    char str[MAX_TOKEN_SIZE];
 } Token;
 
 void set_line(char *line);
