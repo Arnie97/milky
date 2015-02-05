@@ -4,15 +4,15 @@
 
 #define LINE_BUF_SIZE (1024)
 
-static Token st_look_ahead_token;
-static int st_look_ahead_token_exists;
+static Token look_ahead_token;
+static int look_ahead_token_exists;
 
 static void
 my_get_token(Token *token)
 {
-    if (st_look_ahead_token_exists) {
-        *token = st_look_ahead_token;
-        st_look_ahead_token_exists = 0;
+    if (look_ahead_token_exists) {
+        *token = look_ahead_token;
+        look_ahead_token_exists = 0;
     } else {
         get_token(token);
     }
@@ -21,8 +21,8 @@ my_get_token(Token *token)
 static void
 unget_token(Token *token)
 {
-    st_look_ahead_token = *token;
-    st_look_ahead_token_exists = 1;
+    look_ahead_token = *token;
+    look_ahead_token_exists = 1;
 }
 
 double parse_expression(void);
@@ -118,7 +118,7 @@ parse_line(void)
 {
     double value;
 
-    st_look_ahead_token_exists = 0;
+    look_ahead_token_exists = 0;
     value = parse_expression();
 
     return value;

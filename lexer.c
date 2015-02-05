@@ -3,8 +3,8 @@
 #include <ctype.h>
 #include "token.h"
 
-static char *st_line;
-static int st_line_pos;
+static char *line;
+static int line_pos;
 
 typedef enum {
     INITIAL_STATUS,
@@ -24,9 +24,9 @@ get_token(Token *token)
     char last_char, current_char = '\0';
     token->kind = BAD_TOKEN;
 
-    while (st_line[st_line_pos] != '\0') {
-        last_char = st_line[st_line_pos - 1];
-        current_char = st_line[st_line_pos];
+    while (line[line_pos] != '\0') {
+        last_char = line[line_pos - 1];
+        current_char = line[line_pos];
 
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Token too long.\n");
@@ -39,31 +39,31 @@ get_token(Token *token)
                     token->kind = COMMENT_TOKEN;
                     token->str[pos_in_token++] = current_char;
                     token->str[pos_in_token] = '\0';
-                    st_line_pos++;
+                    line_pos++;
                     return;
                 }
                 if (status == IN_BLOCK_COMMENT) {
                     token->str[pos_in_token++] = current_char;
-                    st_line_pos++;
+                    line_pos++;
                     continue;
                 }
                 status = BEGIN_OF_LINE;
                 token->kind = END_OF_LINE_TOKEN;
                 token->str[pos_in_token++] = '\n';
                 token->str[pos_in_token] = '\0';
-                st_line_pos++;
+                line_pos++;
                 return;
             }
             if (status == BEGIN_OF_LINE) { // Warning: If statement with assignment
                 // Test if indent or dedent.
             }
             token->str[pos_in_token++] = current_char;
-            st_line_pos++;
+            line_pos++;
             continue;
         }
         if (status == IN_CHAR_LITERAL) {
             token->str[pos_in_token++] = current_char;
-            st_line_pos++;
+            line_pos++;
             if (last_char != '\\' && current_char == '\'') {
                 status = INITIAL_STATUS;
                 token->kind = CHAR_TOKEN;
@@ -75,7 +75,7 @@ get_token(Token *token)
         }
         if (status == IN_STRING_LITERAL) {
             token->str[pos_in_token++] = current_char;
-            st_line_pos++;
+            line_pos++;
             if (last_char != '\\' && current_char == '"') {
                 status = INITIAL_STATUS;
                 token->kind = STRING_TOKEN;
@@ -87,7 +87,7 @@ get_token(Token *token)
         }
         if (status == IN_BLOCK_COMMENT) {
             token->str[pos_in_token++] = current_char;
-            st_line_pos++;
+            line_pos++;
             if (last_char == '*' && current_char == '/') {
                 status = INITIAL_STATUS;
                 token->kind = COMMENT_TOKEN;
@@ -99,7 +99,7 @@ get_token(Token *token)
         }
         if (status == IN_LINE_COMMENT) {
             token->str[pos_in_token++] = current_char;
-            st_line_pos++;
+            line_pos++;
             continue;
         }
         
@@ -108,20 +108,20 @@ get_token(Token *token)
                 status = IN_LINE_COMMENT;
                 token->str[pos_in_token++] = '/';
                 token->str[pos_in_token++] = '/';
-                st_line_pos++;
+                line_pos++;
                 continue;
             } else if (current_char == '*') {
                 status = IN_BLOCK_COMMENT;
                 token->str[pos_in_token++] = '/';
                 token->str[pos_in_token++] = '*';
-                st_line_pos++;
+                line_pos++;
                 continue;
             } else if (current_char == '=') {
                 token->kind = OPERATOR_TOKEN;
                 token->str[0] = '/';
                 token->str[1] = '=';
                 token->str[2] = '\0';
-                st_line_pos++;
+                line_pos++;
                 return;
             } else if (status == AFTER_DIVISOR) {
                 status = INITIAL_STATUS;
@@ -134,7 +134,7 @@ get_token(Token *token)
             }
         }
         if (current_char == '/') {
-            st_line_pos++;
+            line_pos++;
             continue;
         }
 
@@ -155,20 +155,20 @@ get_token(Token *token)
             status = IN_CHAR_LITERAL;
             token->str[pos_in_token++] = current_char;
             printf("CHR^\n");
-            st_line_pos++;
+            line_pos++;
             continue;
         case '\"':
             status = IN_STRING_LITERAL;
             token->str[pos_in_token++] = current_char;
             printf("STR^\n");
-            st_line_pos++;
+            line_pos++;
             continue;
         case '#':
             token->kind = SHARP_TOKEN;
             break;
         }
         token->str[pos_in_token++] = current_char;
-        st_line_pos++;
+        line_pos++;
         return;
     }
 }
@@ -176,8 +176,8 @@ get_token(Token *token)
 void
 set_line(char *line)
 {
-    st_line = line;
-    st_line_pos = 0;
+    line = line;
+    line_pos = 0;
 }
 
 #if 1
@@ -185,13 +185,13 @@ void
 parse_line(void)
 {
     Token token;
-    st_line_pos = 0;
+    line_pos = 0;
     printf("start!\n");
     for (;;) {
-        int prev_pos = st_line_pos;
+        int prev_pos = line_pos;
         get_token(&token);
-        printf("st_line_pos..%d->%d....kind..%d....str..%s",
-            prev_pos, st_line_pos, token.kind, token.str);
+        printf("line_pos..%d->%d....kind..%d....str..%s",
+            prev_pos, line_pos, token.kind, token.str);
         getchar();
         if (token.kind == SHARP_TOKEN) {
             break;
@@ -206,10 +206,10 @@ main(int argc, char **argv)
 {
     //         (1+2) 'one + two \' @'    // comments
     //         "abc \" def" /* another */#
-    st_line = "(1+2) 'one + two \\' @'    // comments\n\"abc \\\" def\" /* another */#";
+    line = "(1+2) 'one + two \\' @'    // comments\n\"abc \\\" def\" /* another */#";
     parse_line();
 /*
-    while (fgets(st_line, LINE_BUF_SIZE, stdin) != NULL) {
+    while (fgets(line, LINE_BUF_SIZE, stdin) != NULL) {
         parse_line();
     }
 
