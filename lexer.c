@@ -8,10 +8,10 @@
 
 static char line[LINE_BUF_SIZE] = "~";
 static int line_pos;
+static char indents[MAX_INDENTATION_LEVEL] = { 0 }, current_indent;
 
 typedef enum {
     INITIAL_STATUS,
-    BEGIN_OF_LINE,
     IN_STRING_LITERAL,
     IN_CHAR_LITERAL,
     IN_BLOCK_COMMENT,
@@ -23,7 +23,34 @@ get_token(Token *token)
 {
     int pos_in_token = 0;
     static LexerStatus status = INITIAL_STATUS;
-    char last_char, current_char, next_char;
+    char last_char, current_char, next_char, *outer_indent;
+
+    char last_indent = strlen(indents);
+    if (last_indent != 0) {
+        last_indent = indents[last_indent - 1];
+    }
+    char indent_change = current_indent - last_indent;
+    if (indent_change > 0) {
+        token->kind = INDENT_TOKEN;
+        printf("INDENT>>%d\n", indent_change);
+        indents[strlen(indents)] = current_indent;
+        retpos;
+    }
+    if (indent_change < 0) {
+        token->kind = UNINDENT_TOKEN;
+        if (current_indent == indents[strlen(indents) - 2]) {
+            ;
+        } else if ((outer_indent = strchr(indents, current_indent)) != NULL) {
+            current_indent = last_indent;
+        } else {
+            fprintf(stderr, "Unindent does not match any outer indentation level.\n");
+            exit(3);
+        }
+        printf("UNINDENT<<%d\n", -indent_change);
+        indents[strlen(indents) - 1] = 0;
+        retpos;
+    }
+
     token->kind = BAD_TOKEN;
 
     while ((current_char = line[line_pos]) != '\0') {
@@ -40,12 +67,9 @@ get_token(Token *token)
                 if (status == IN_BLOCK_COMMENT) {
                     continue;
                 }
-                status = BEGIN_OF_LINE;
                 token->kind = END_OF_LINE_TOKEN; // Should recognize escaped EOL.
+                current_indent = 0;
                 retpos;
-            }
-            if (status == BEGIN_OF_LINE) { // Warning: If statement with assignment
-                // Test if indent or dedent.
             }
             append;
             continue;
@@ -156,6 +180,9 @@ get_whitespace(Token *token, int pos_in_token)
         }
         if (!isspace(current_char) || current_char == '\n') {
             break;
+        }
+        if (token->kind == END_OF_LINE_TOKEN) {
+            current_indent++;
         }
         append;
     }

@@ -10,7 +10,7 @@ typedef enum {
     COMMENT_TOKEN,
 
     INDENT_TOKEN,
-    DEDENT_TOKEN,
+    UNINDENT_TOKEN,
     END_OF_LINE_TOKEN,
     ESCAPED_LINE_TOKEN,
 
@@ -32,6 +32,7 @@ typedef enum {
 
 #define MAX_TOKEN_SIZE (100)
 #define LINE_BUF_SIZE (1000)
+#define MAX_INDENTATION_LEVEL (20)
 
 typedef struct {
     TokenKind kind;
