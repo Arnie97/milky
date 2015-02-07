@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "token.h"
 
 static char line[LINE_BUF_SIZE] = "~";
@@ -103,39 +104,24 @@ get_token(Token *token)
             continue;
         }
         
-        if (last_char == '/') {
-            if (current_char == '/') {
+        if (current_char == '/') {
+            switch (next_char) {
+            case '/':
                 status = IN_LINE_COMMENT;
-                token->str[pos_in_token++] = '/';
-                token->str[pos_in_token++] = '/';
+                token->str[pos_in_token++] = current_char;
                 line_pos++;
                 continue;
-            } else if (current_char == '*') {
+            case '*':
                 status = IN_BLOCK_COMMENT;
-                token->str[pos_in_token++] = '/';
-                token->str[pos_in_token++] = '*';
+                token->str[pos_in_token++] = current_char;
                 line_pos++;
                 continue;
-            } else if (current_char == '=') {
+            case '=':
                 token->kind = OPERATOR_TOKEN;
-                token->str[0] = '/';
-                token->str[1] = '=';
-                token->str[2] = '\0';
-                line_pos++;
-                return;
-            } else if (status == AFTER_DIVISOR) {
-                status = INITIAL_STATUS;
-            } else { // With fault around used slash.
-                status = AFTER_DIVISOR;
-                token->kind = OPERATOR_TOKEN;
-                token->str[0] = '/';
-                token->str[1] = '\0';
+                strcpy("/=", token->str);
+                line_pos += 2;
                 return;
             }
-        }
-        if (current_char == '/') {
-            line_pos++;
-            continue;
         }
 
         if (isalnum(current_char) || current_char == '_') {
