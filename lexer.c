@@ -138,6 +138,17 @@ get_token(Token *token)
             continue;
         }
 
+        if (isalnum(current_char) || current_char == '_') {
+            token->str[pos_in_token++] = current_char;
+            line_pos++;
+            if (isalnum(next_char) || next_char == '_') {
+                continue;
+            }
+            token->kind = IDENTIFIER_TOKEN;
+            token->str[pos_in_token] = '\0';
+            return;
+        }
+
         switch (current_char) {
         case '+':
         case '-':
