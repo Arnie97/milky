@@ -38,7 +38,6 @@ typedef struct {
     char str[MAX_TOKEN_SIZE];
 } Token;
 
-void set_line(char *line);
-void get_token(Token *token);
+int get_token(Token *token);
 
 #endif /* TOKEN_H_INCLUDED */

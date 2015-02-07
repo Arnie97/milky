@@ -4,7 +4,7 @@
 #include <string.h>
 #include "token.h"
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
-#define terminate { token->str[pos_in_token] = '\0'; }
+#define retpos { return pos_in_token; }
 
 static char line[LINE_BUF_SIZE] = "~";
 static int line_pos;
@@ -18,7 +18,7 @@ typedef enum {
     IN_LINE_COMMENT,
 } LexerStatus;
 
-void
+int
 get_token(Token *token)
 {
     int pos_in_token = 0;
@@ -33,7 +33,7 @@ get_token(Token *token)
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Token too long.\n");
             exit(1);
-        }    
+        }
         if (isspace(current_char)) {
             if (current_char == '\n') {
                 append;
@@ -41,14 +41,13 @@ get_token(Token *token)
                     continue;
                 }
                 status = BEGIN_OF_LINE;
-                token->kind = END_OF_LINE_TOKEN;
-                terminate;
-                return;
+                token->kind = END_OF_LINE_TOKEN; // Should recognize escaped EOL.
+                retpos;
             }
             if (status == BEGIN_OF_LINE) { // Warning: If statement with assignment
                 // Test if indent or dedent.
             }
-            append; // Should append it to the previous token instead.
+            append;
             continue;
         }
         if (status == IN_CHAR_LITERAL) {
@@ -56,8 +55,7 @@ get_token(Token *token)
             if (last_char != '\\' && current_char == '\'') {
                 status = INITIAL_STATUS;
                 token->kind = CHAR_TOKEN;
-                terminate;
-                return;
+                retpos;
             } else {
                 continue;
             }
@@ -67,8 +65,7 @@ get_token(Token *token)
             if (last_char != '\\' && current_char == '"') {
                 status = INITIAL_STATUS;
                 token->kind = STRING_TOKEN;
-                terminate;
-                return;
+                retpos;
             } else {
                 continue;
             }
@@ -78,8 +75,7 @@ get_token(Token *token)
             if (last_char == '*' && current_char == '/') {
                 status = INITIAL_STATUS;
                 token->kind = COMMENT_TOKEN;
-                terminate;
-                return;
+                retpos;
             } else {
                 continue;
             }
@@ -89,12 +85,11 @@ get_token(Token *token)
             if (next_char == '\n') {
                 status = INITIAL_STATUS;
                 token->kind = COMMENT_TOKEN;
-                terminate;
-                return;
+                retpos;
             }
             continue;
         }
-        
+
         if (current_char == '/') {
             switch (next_char) {
             case '/':
@@ -109,7 +104,8 @@ get_token(Token *token)
                 token->kind = OPERATOR_TOKEN;
                 strcpy("/=", token->str);
                 line_pos += 2;
-                return;
+                pos_in_token += 2;
+                retpos;
             }
         }
 
@@ -119,8 +115,7 @@ get_token(Token *token)
                 continue;
             }
             token->kind = IDENTIFIER_TOKEN;
-            terminate;
-            return;
+            retpos;
         }
 
         switch (current_char) {
@@ -146,16 +141,25 @@ get_token(Token *token)
             continue;
         }
         append;
-        terminate;
-        return;
+        retpos;
     }
 }
 
 void
-set_line(char *line)
+get_whitespace(Token *token, int pos_in_token)
 {
-    line = line;
-    line_pos = 0;
+    char current_char;
+    while ((current_char = line[line_pos]) != '\0') {
+        if (pos_in_token >= MAX_TOKEN_SIZE) {
+            fprintf(stderr, "Whitespace too long.\n");
+            exit(2);
+        }
+        if (!isspace(current_char) || current_char == '\n') {
+            break;
+        }
+        append;
+    }
+    token->str[pos_in_token] = '\0';
 }
 
 #if 1
@@ -167,10 +171,10 @@ parse_line(void)
     printf("start!\n");
     for (;;) {
         int prev_pos = line_pos;
-        get_token(&token);
+        get_whitespace(&token, get_token(&token));
         printf(token.kind > 0x20?
-            "line_pos..%d->%d....kind..%c....str..%s":
-            "line_pos..%d->%d....kind..%d....str..%s",
+            "line_pos..%d->%d....kind..%c....str..%s.":
+            "line_pos..%d->%d....kind..%d....str..%s.",
             prev_pos, line_pos, token.kind, token.str);
         getchar();
         if (token.kind == SHARP_TOKEN) {
@@ -186,7 +190,7 @@ main(int argc, char **argv)
     if (fp == NULL) {
         fprintf(stderr, "Test file not found!\n");
         return 1;
-    }    
+    }
     char buffer[LINE_BUF_SIZE];
     while (fgets(buffer, LINE_BUF_SIZE, fp) != NULL) {
         strcat(line, buffer);
