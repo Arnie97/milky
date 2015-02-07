@@ -16,7 +16,6 @@ typedef enum {
     IN_CHAR_LITERAL,
     IN_BLOCK_COMMENT,
     IN_LINE_COMMENT,
-    AFTER_DIVISOR
 } LexerStatus;
 
 void
@@ -34,30 +33,22 @@ get_token(Token *token)
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Token too long.\n");
             exit(1);
-        }
+        }    
         if (isspace(current_char)) {
             if (current_char == '\n') {
-                if (status == IN_LINE_COMMENT) { // Should return a separate EOL instead, modify :96
-                    status = INITIAL_STATUS;
-                    token->kind = COMMENT_TOKEN;
-                    append;
-                    terminate;
-                    return;
-                }
+                append;
                 if (status == IN_BLOCK_COMMENT) {
-                    append;
                     continue;
                 }
                 status = BEGIN_OF_LINE;
                 token->kind = END_OF_LINE_TOKEN;
-                append;
                 terminate;
                 return;
             }
             if (status == BEGIN_OF_LINE) { // Warning: If statement with assignment
                 // Test if indent or dedent.
             }
-            append;
+            append; // Should append it to the previous token instead.
             continue;
         }
         if (status == IN_CHAR_LITERAL) {
@@ -95,6 +86,12 @@ get_token(Token *token)
         }
         if (status == IN_LINE_COMMENT) {
             append;
+            if (next_char == '\n') {
+                status = INITIAL_STATUS;
+                token->kind = COMMENT_TOKEN;
+                terminate;
+                return;
+            }
             continue;
         }
         
