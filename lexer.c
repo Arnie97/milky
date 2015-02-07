@@ -185,7 +185,9 @@ parse_line(void)
     for (;;) {
         int prev_pos = line_pos;
         get_token(&token);
-        printf("line_pos..%d->%d....kind..%d....str..%s",
+        printf(token.kind > 0x20?
+            "line_pos..%d->%d....kind..%c....str..%s":
+            "line_pos..%d->%d....kind..%d....str..%s",
             prev_pos, line_pos, token.kind, token.str);
         getchar();
         if (token.kind == SHARP_TOKEN) {
