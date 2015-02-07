@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include "token.h"
 
-static char *line;
+static char line[LINE_BUF_SIZE] = "~";
 static int line_pos;
 
 typedef enum {
@@ -186,7 +186,7 @@ void
 parse_line(void)
 {
     Token token;
-    line_pos = 0;
+    line_pos = 1;
     printf("start!\n");
     for (;;) {
         int prev_pos = line_pos;
@@ -199,22 +199,21 @@ parse_line(void)
         }
     }
 }
-#endif
 
-#if 1
 int
 main(int argc, char **argv)
 {
-    //         (1+2) 'one + two \' @'    // comments
-    //         "abc \" def" /* another */#
-    line = "(1+2) 'one + two \\' @'    // comments\n\"abc \\\" def\" /* another */#";
-    parse_line();
-/*
-    while (fgets(line, LINE_BUF_SIZE, stdin) != NULL) {
-        parse_line();
+    FILE *fp = fopen("foobar.milk", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Test file not found!\n");
+        return 1;
+    }    
+    char buffer[LINE_BUF_SIZE];
+    while (fgets(buffer, LINE_BUF_SIZE, fp) != NULL) {
+        strcat(line, buffer);
     }
-
+    fclose(fp);
+    parse_line();
     return 0;
-*/
 }
 #endif
