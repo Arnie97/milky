@@ -136,17 +136,17 @@ get_token(Token *token)
         }
 
         switch (current_char) {
-        case '+':
-        case '-':
-        case '*':
-        case '/':
+        case '+': case '-': case '*': case '/':
             token->kind = OPERATOR_TOKEN;
             break;
-        case '(':
-            token->kind = LEFT_PAREN_TOKEN;
+        case '=':
+            token->kind = ASSIGNMENT_TOKEN;
             break;
-        case ')':
-            token->kind = RIGHT_PAREN_TOKEN;
+        case '(': case ')': case '[': case ']':
+        case '{': case '}': case '.': case ',':
+        case '!': case '?': case ':': case ';':
+        case '#':
+            token->kind = current_char;
             break;
         case '\'':
             status = IN_CHAR_LITERAL;
@@ -160,9 +160,6 @@ get_token(Token *token)
             printf("STR^\n");
             line_pos++;
             continue;
-        case '#':
-            token->kind = SHARP_TOKEN;
-            break;
         }
         token->str[pos_in_token++] = current_char;
         token->str[pos_in_token] = '\0';
