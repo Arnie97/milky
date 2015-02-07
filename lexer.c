@@ -168,6 +168,7 @@ get_token(Token *token)
             break;
         }
         token->str[pos_in_token++] = current_char;
+        token->str[pos_in_token] = '\0';
         line_pos++;
         return;
     }
