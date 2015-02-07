@@ -21,12 +21,12 @@ get_token(Token *token)
 {
     int pos_in_token = 0;
     static LexerStatus status = INITIAL_STATUS;
-    char last_char, current_char = '\0';
+    char last_char, current_char, next_char;
     token->kind = BAD_TOKEN;
 
-    while (line[line_pos] != '\0') {
+    while ((current_char = line[line_pos]) != '\0') {
         last_char = line[line_pos - 1];
-        current_char = line[line_pos];
+        next_char = line[line_pos + 1];
 
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Token too long.\n");
