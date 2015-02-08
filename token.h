@@ -23,7 +23,6 @@ typedef enum {
     LEFT_BRACE_TOKEN = '{',   RIGHT_BRACE_TOKEN = '}',
     DOT_TOKEN = '.',
     COMMA_TOKEN = ',',
-    EXCLAMATION_TOKEN = '!',
     QUESTION_TOKEN = '?',
     COLON_TOKEN = ':',
     SEMICOLON_TOKEN = ';',
@@ -40,7 +39,7 @@ typedef struct {
     char str[MAX_TOKEN_SIZE];
 } Token;
 
-static char *keywords[12] = {
+static char *keywords[14] = {
     "if",
     "else",
     "elif",
@@ -52,7 +51,9 @@ static char *keywords[12] = {
     "case",
     "default",
     "fallthrough",
-    "pass"
+    "pass",
+    "enum",
+    "struct"
 };
 
 int get_token(Token *token);

@@ -125,12 +125,6 @@ get_token(Token *token)
                 status = IN_BLOCK_COMMENT;
                 append;
                 continue;
-            case '=':
-                token->kind = OPERATOR_TOKEN;
-                strcpy("/=", token->str);
-                line_pos += 2;
-                pos_in_token += 2;
-                retpos;
             }
         }
 
@@ -152,16 +146,62 @@ get_token(Token *token)
         }
 
         switch (current_char) {
-        case '+': case '-': case '*': case '/':
+        case '-':
+            if (next_char == '>') {
+                token->kind = OPERATOR_TOKEN;
+                append;
+                current_char = next_char;
+                break;
+            }
+            /* fallthrough; */
+        case '+':
+            if (current_char == next_char) {
+                token->kind = ASSIGNMENT_TOKEN;
+                append;
+                // current_char = next_char;
+                break;
+            }
+            /* fallthrough; */
+        case '&': case '|':
+            if (current_char == next_char) {
+                token->kind = OPERATOR_TOKEN;
+                append;
+                // current_char = next_char;
+                break;
+            }
+            /* fallthrough; */
+        case '*': case '/': case '^': case '%':
+            if (next_char == '=') {
+                token->kind = ASSIGNMENT_TOKEN;
+                append;
+                current_char = next_char;
+                break;
+            }
             token->kind = OPERATOR_TOKEN;
             break;
-        case '=':
-            token->kind = ASSIGNMENT_TOKEN;
+        case '=': case '!': case '<': case '>':
+            if (next_char != '=') {
+                if (current_char == '=') {
+                    token->kind = ASSIGNMENT_TOKEN;
+                    break;
+                } else if (current_char == '!') {
+                    token->kind = OPERATOR_TOKEN;
+                    break;
+                } else if (current_char == next_char) {
+                    token->kind = OPERATOR_TOKEN;
+                    append;
+                    // current_char = next_char;
+                    break;
+                }
+            } else {
+                append;
+                current_char = next_char;
+            }
+            token->kind = COMPARISON_TOKEN;
             break;
         case '(': case ')': case '[': case ']':
         case '{': case '}': case '.': case ',':
-        case '!': case '?': case ':': case ';':
-        case '#':
+        case '#': case '?': case ':': case ';':
             token->kind = current_char;
             break;
         case '\'':
