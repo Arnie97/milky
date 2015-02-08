@@ -36,8 +36,24 @@ typedef enum {
 
 typedef struct {
     TokenKind kind;
+    char type;
     char str[MAX_TOKEN_SIZE];
 } Token;
+
+static char *keywords[12] = {
+    "if",
+    "else",
+    "elif",
+    "for",
+    "do",
+    "while",
+    "until",
+    "switch",
+    "case",
+    "default",
+    "fallthrough",
+    "pass"
+};
 
 int get_token(Token *token);
 

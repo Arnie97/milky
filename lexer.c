@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "token.h"
+
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
 #define retpos { return pos_in_token; }
 
@@ -138,6 +139,14 @@ get_token(Token *token)
             if (isalnum(next_char) || next_char == '_') {
                 continue;
             }
+            token->str[pos_in_token] = '\0';
+            for (int type = sizeof(keywords) / sizeof(char *) - 1; type >= 0; type--) {
+                if (strcmp(token->str, keywords[type]) == 0) {
+                    token->kind = KEYWORD_TOKEN;
+                    token->type = type;
+                    retpos;
+                }
+            }
             token->kind = IDENTIFIER_TOKEN;
             retpos;
         }
@@ -200,8 +209,8 @@ parse_line(void)
         int prev_pos = line_pos;
         get_whitespace(&token, get_token(&token));
         printf(token.kind > 0x20?
-            "line_pos..%d->%d....kind..%c....str..%s.":
-            "line_pos..%d->%d....kind..%d....str..%s.",
+            "line_pos..%d->%d   kind..%c    str..[%s]":
+            "line_pos..%d->%d   kind..%d    str..[%s]",
             prev_pos, line_pos, token.kind, token.str);
         getchar();
         if (token.kind == SHARP_TOKEN) {
