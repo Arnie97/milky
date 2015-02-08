@@ -30,7 +30,7 @@ typedef enum {
 } TokenKind;
 
 #define MAX_TOKEN_SIZE (100)
-#define LINE_BUF_SIZE (1000)
+#define LINE_BUF_SIZE (4096)
 #define MAX_INDENTATION_LEVEL (20)
 
 typedef struct {

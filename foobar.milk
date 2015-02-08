@@ -1,11 +1,25 @@
-#include <stdio.h>
+include <stdio.h>
+
+  /* WARNING */
+int ernal,  magic;
+void  if__removed;
+
+enum SecretsBureau:
+    StrawStraw,
+    MiaoMiao
 
 int main(int argc, char const *argv[]):
-    int foo, bar
+    short pants = 1989-06-04;               // blah blah blah
+    long trousers = 0xC0ffee / 0xCafe;
+    int foo; char *piyo = "abc \" def"
+    char baz = 'one + two \' @';
+
+    pants += trousers *= 0x1997
     scanf("%d %d", &foo, &bar)
     if bar == 9:
-        while foo < bar:
-            switch foo:
+        while foo <= bar:   /* yet another
+comment */  switch:
+                foo
             case 1:
                 printf("foo = 1\n")
             case 2:
@@ -14,9 +28,9 @@ int main(int argc, char const *argv[]):
             case 0, 4, 6, 8:
                 printf("foo is even\n")
             default:
-                printf("foo is unknown\n")
+/* weird! */    printf("foo is unknown\n")
             foo += bar
-    elseif foo == 9:
+    elseif foo != 9:
         for int i = 0;i < 10;++i:
             printf("%d ", i)
     else:
@@ -24,3 +38,12 @@ int main(int argc, char const *argv[]):
             foo -= bar
         printf("foo: %d, bar: %d\n", foo, bar)
     return 0
+
+    
+typedef void element
+struct Jinkela:
+    element Nitrogen,
+    element Phosphorus,
+    element Potassium
+
+#
