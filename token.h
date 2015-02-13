@@ -33,8 +33,6 @@ typedef enum {
 } TokenKind;
 
 #define MAX_TOKEN_SIZE (100)
-#define LINE_BUF_SIZE (4096)
-#define MAX_INDENTATION_LEVEL (20)
 
 typedef struct {
     TokenKind kind;
@@ -49,7 +47,7 @@ static char *keywords[14] = {
     "for",
     "do",
     "while",
-    "until",
+    "repeat",
     "switch",
     "case",
     "default",
@@ -58,7 +56,5 @@ static char *keywords[14] = {
     "enum",
     "struct"
 };
-
-int get_token(Token *token);
 
 #endif /* TOKEN_H_INCLUDED */

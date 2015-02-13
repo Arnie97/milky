@@ -1,15 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <string.h>
+#include "milky.h"
 #include "token.h"
+#include "lexer.h"
 
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
 #define subtract { token->str[--pos_in_token] = '\0'; line_pos--; }
 #define retpos { return pos_in_token; }
 
-static char line[LINE_BUF_SIZE] = "~";
-static int line_pos;
 static char indents[MAX_INDENTATION_LEVEL] = { 0 }, current_indent;
 
 int
@@ -226,42 +222,3 @@ get_whitespace(Token *token, int pos_in_token)
     }
     token->str[pos_in_token] = '\0';
 }
-
-#if 1
-void
-parse_line(void)
-{
-    Token token;
-    line_pos = 1;
-    printf("start!\n");
-    for (;;) {
-        int prev_pos = line_pos;
-        get_whitespace(&token, get_token(&token));
-        printf(token.kind > 0x20?
-            "line_pos..%d->%d   kind..%c    str..[%s]":
-            "line_pos..%d->%d   kind..%d    str..[%s]",
-            prev_pos, line_pos, token.kind, token.str);
-        getchar();
-        if (token.kind == SHARP_TOKEN) {
-            break;
-        }
-    }
-}
-
-int
-main(int argc, char **argv)
-{
-    FILE *fp = fopen("foobar.milk", "r");
-    if (fp == NULL) {
-        fprintf(stderr, "Test file not found!\n");
-        return 1;
-    }
-    char buffer[LINE_BUF_SIZE];
-    while (fgets(buffer, LINE_BUF_SIZE, fp) != NULL) {
-        strcat(line, buffer);
-    }
-    fclose(fp);
-    parse_line();
-    return 0;
-}
-#endif
