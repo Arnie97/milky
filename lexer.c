@@ -5,6 +5,7 @@
 #include "token.h"
 
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
+#define subtract { token->str[--pos_in_token] = '\0'; line_pos--; }
 #define retpos { return pos_in_token; }
 
 static char line[LINE_BUF_SIZE] = "~";
@@ -75,32 +76,27 @@ get_token(Token *token)
             append;
             continue;
         }
-        if (token->kind == CHAR_TOKEN) {
-            append;
+
+        append;
+        switch (token->kind) {
+        case CHAR_TOKEN:
             if (last_char != '\\' && current_char == '\'') {
                 retpos;
-            } else {
-                continue;
             }
-        }
-        if (token->kind == STRING_TOKEN) {
-            append;
+            continue;
+        case STRING_TOKEN:
+        case MULTILINE_STRING_TOKEN:
             if (last_char != '\\' && current_char == '"') {
                 retpos;
-            } else {
-                continue;
             }
-        }
-        if (token->kind == BLOCK_COMMENT_TOKEN || token->kind == MULTILINE_COMMENT_TOKEN) {
-            append;
+            continue;
+        case BLOCK_COMMENT_TOKEN:
+        case MULTILINE_COMMENT_TOKEN:
             if (last_char == '*' && current_char == '/') {
                 retpos;
-            } else {
-                continue;
             }
-        }
-        if (token->kind == LINE_COMMENT_TOKEN) {
-            append;
+            continue;
+        case LINE_COMMENT_TOKEN:
             if (next_char == '\n') {
                 retpos;
             }
@@ -111,17 +107,14 @@ get_token(Token *token)
             switch (next_char) {
             case '/':
                 token->kind = LINE_COMMENT_TOKEN;
-                append;
                 continue;
             case '*':
                 token->kind = BLOCK_COMMENT_TOKEN;
-                append;
                 continue;
             }
         }
 
         if (isalnum(current_char) || current_char == '_') {
-            append;
             if (isalnum(next_char) || next_char == '_') {
                 continue;
             }
@@ -136,6 +129,7 @@ get_token(Token *token)
             token->kind = IDENTIFIER_TOKEN;
             retpos;
         }
+        subtract;
 
         switch (current_char) {
         case '-':
