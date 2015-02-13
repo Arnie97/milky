@@ -65,10 +65,19 @@ get_token(Token *token)
         if (isspace(current_char)) {
             if (current_char == '\n') {
                 append;
-                if (status == IN_BLOCK_COMMENT) {
+                if (last_char == '\\') {
+                    token->kind = ESCAPED_LINE_TOKEN;
+                    retpos;
+                }
+                if (status == IN_STRING_LITERAL) {
+                    token->kind = MULTILINE_STRING_TOKEN;
                     continue;
                 }
-                token->kind = END_OF_LINE_TOKEN; // Should recognize escaped EOL.
+                if (status == IN_BLOCK_COMMENT) {
+                    token->kind = MULTILINE_COMMENT_TOKEN;
+                    continue;
+                }
+                token->kind = END_OF_LINE_TOKEN;
                 current_indent = 0;
                 retpos;
             }
@@ -79,7 +88,6 @@ get_token(Token *token)
             append;
             if (last_char != '\\' && current_char == '\'') {
                 status = INITIAL_STATUS;
-                token->kind = CHAR_TOKEN;
                 retpos;
             } else {
                 continue;
@@ -89,7 +97,6 @@ get_token(Token *token)
             append;
             if (last_char != '\\' && current_char == '"') {
                 status = INITIAL_STATUS;
-                token->kind = STRING_TOKEN;
                 retpos;
             } else {
                 continue;
@@ -99,7 +106,6 @@ get_token(Token *token)
             append;
             if (last_char == '*' && current_char == '/') {
                 status = INITIAL_STATUS;
-                token->kind = COMMENT_TOKEN;
                 retpos;
             } else {
                 continue;
@@ -123,6 +129,7 @@ get_token(Token *token)
                 continue;
             case '*':
                 status = IN_BLOCK_COMMENT;
+                token->kind = COMMENT_TOKEN;
                 append;
                 continue;
             }
@@ -206,10 +213,12 @@ get_token(Token *token)
             break;
         case '\'':
             status = IN_CHAR_LITERAL;
+            token->kind = CHAR_TOKEN;
             append;
             continue;
         case '\"':
             status = IN_STRING_LITERAL;
+            token->kind = STRING_TOKEN;
             append;
             continue;
         }
