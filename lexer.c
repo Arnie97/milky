@@ -231,6 +231,9 @@ void
 get_whitespace(Token *token, int pos_in_token)
 {
     char current_char;
+    if (token->kind == MULTILINE_COMMENT_TOKEN) {
+        current_indent = pos_in_token - (int)(strrchr(token->str, '\n') - token->str + 1) / sizeof(char);
+    }
     while ((current_char = line[line_pos]) != '\0') {
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Whitespace too long.\n");
@@ -239,7 +242,7 @@ get_whitespace(Token *token, int pos_in_token)
         if (!isspace(current_char) || current_char == '\n') {
             break;
         }
-        if (token->kind == END_OF_LINE_TOKEN) {
+        if (token->kind == END_OF_LINE_TOKEN || token->kind == MULTILINE_COMMENT_TOKEN) {
             current_indent++;
         }
         append;
