@@ -11,19 +11,10 @@ static char line[LINE_BUF_SIZE] = "~";
 static int line_pos;
 static char indents[MAX_INDENTATION_LEVEL] = { 0 }, current_indent;
 
-typedef enum {
-    INITIAL_STATUS,
-    IN_STRING_LITERAL,
-    IN_CHAR_LITERAL,
-    IN_BLOCK_COMMENT,
-    IN_LINE_COMMENT,
-} LexerStatus;
-
 int
 get_token(Token *token)
 {
     int pos_in_token = 0;
-    static LexerStatus status = INITIAL_STATUS;
     char last_char, current_char, next_char, *outer_indent;
 
     char last_indent = strlen(indents);
@@ -69,11 +60,11 @@ get_token(Token *token)
                     token->kind = ESCAPED_LINE_TOKEN;
                     retpos;
                 }
-                if (status == IN_STRING_LITERAL) {
+                if (token->kind == STRING_TOKEN) {
                     token->kind = MULTILINE_STRING_TOKEN;
                     continue;
                 }
-                if (status == IN_BLOCK_COMMENT) {
+                if (token->kind == BLOCK_COMMENT_TOKEN) {
                     token->kind = MULTILINE_COMMENT_TOKEN;
                     continue;
                 }
@@ -84,38 +75,33 @@ get_token(Token *token)
             append;
             continue;
         }
-        if (status == IN_CHAR_LITERAL) {
+        if (token->kind == CHAR_TOKEN) {
             append;
             if (last_char != '\\' && current_char == '\'') {
-                status = INITIAL_STATUS;
                 retpos;
             } else {
                 continue;
             }
         }
-        if (status == IN_STRING_LITERAL) {
+        if (token->kind == STRING_TOKEN) {
             append;
             if (last_char != '\\' && current_char == '"') {
-                status = INITIAL_STATUS;
                 retpos;
             } else {
                 continue;
             }
         }
-        if (status == IN_BLOCK_COMMENT) {
+        if (token->kind == BLOCK_COMMENT_TOKEN || token->kind == MULTILINE_COMMENT_TOKEN) {
             append;
             if (last_char == '*' && current_char == '/') {
-                status = INITIAL_STATUS;
                 retpos;
             } else {
                 continue;
             }
         }
-        if (status == IN_LINE_COMMENT) {
+        if (token->kind == LINE_COMMENT_TOKEN) {
             append;
             if (next_char == '\n') {
-                status = INITIAL_STATUS;
-                token->kind = COMMENT_TOKEN;
                 retpos;
             }
             continue;
@@ -124,12 +110,11 @@ get_token(Token *token)
         if (current_char == '/') {
             switch (next_char) {
             case '/':
-                status = IN_LINE_COMMENT;
+                token->kind = LINE_COMMENT_TOKEN;
                 append;
                 continue;
             case '*':
-                status = IN_BLOCK_COMMENT;
-                token->kind = COMMENT_TOKEN;
+                token->kind = BLOCK_COMMENT_TOKEN;
                 append;
                 continue;
             }
@@ -212,12 +197,10 @@ get_token(Token *token)
             token->kind = current_char;
             break;
         case '\'':
-            status = IN_CHAR_LITERAL;
             token->kind = CHAR_TOKEN;
             append;
             continue;
         case '\"':
-            status = IN_STRING_LITERAL;
             token->kind = STRING_TOKEN;
             append;
             continue;
