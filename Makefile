@@ -12,7 +12,7 @@ clean:
 	rm -rf `find ./ -name '*.exe' -print`
 
 test: build
-	./milky
+	./milky foobar.milk
 
 build: milky
 

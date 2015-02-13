@@ -8,10 +8,14 @@ int line_pos = 1;
 int
 main(int argc, char **argv)
 {
-    FILE *fp = fopen("foobar.milk", "r");
+    if (argc == 1) {
+        fprintf(stderr, "No input files.\n");
+        return 5;
+    }
+    FILE *fp = fopen(argv[1], "r");
     if (fp == NULL) {
         fprintf(stderr, "Test file not found!\n");
-        return 1;
+        return 6;
     }
     char buffer[LINE_BUF_SIZE];
     while (fgets(buffer, LINE_BUF_SIZE, fp) != NULL) {
