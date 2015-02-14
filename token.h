@@ -41,21 +41,4 @@ typedef struct {
     char str[MAX_TOKEN_SIZE];
 } Token;
 
-static char *keywords[14] = {
-    "if",
-    "else",
-    "elif",
-    "for",
-    "do",
-    "while",
-    "repeat",
-    "switch",
-    "case",
-    "default",
-    "fallthrough",
-    "pass",
-    "enum",
-    "struct"
-};
-
 #endif /* TOKEN_H_INCLUDED */

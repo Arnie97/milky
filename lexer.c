@@ -1,5 +1,6 @@
 #include "milky.h"
 #include "token.h"
+#include "keyword.h"
 #include "lexer.h"
 
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
