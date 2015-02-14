@@ -159,6 +159,8 @@ get_token(Token *token)
                 current_char = next_char;
                 break;
             }
+            /* fallthrough; */
+        case '~':
             token->kind = OPERATOR_TOKEN;
             break;
         case '=': case '!': case '<': case '>':
@@ -181,9 +183,17 @@ get_token(Token *token)
             }
             token->kind = COMPARISON_TOKEN;
             break;
+        case ':':
+            if (current_char == next_char) {
+                token->kind = SCOPE_TOKEN;
+                append;
+                // current_char = next_char;
+                break;
+            }
+            /* fallthrough; */
         case '(': case ')': case '[': case ']':
         case '{': case '}': case '.': case ',':
-        case '#': case '?': case ':': case ';':
+        case '#': case '?': case ';':
             token->kind = current_char;
             break;
         case '\'':
