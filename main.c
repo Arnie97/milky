@@ -1,4 +1,5 @@
 #include "milky.h"
+#include "token.h"
 #include "translator.h"
 #include "main.h"
 
