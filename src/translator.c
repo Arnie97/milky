@@ -31,13 +31,13 @@ parse_file(void)
 {
     Token token;
     printf("start!\n");
-    for (;;) {
+    do {
         int prev_pos = line_pos;
         next_token(&token);
         printf(token.kind > 0x20?
-            "line_pos..%d->%d   kind..%c    str..[%s]":
-            "line_pos..%d->%d   kind..%d    str..[%s]",
-            prev_pos, line_pos, token.kind, token.str);
+            "look_ahead..%d(%d,%d)->%d  kind..%c  str..[%s]":
+            "look_ahead..%d(%d,%d)->%d  kind..%d  str..[%s]",
+            prev_pos, token.row, token.column, line_pos, token.kind, token.str);
         getchar();
-    }
+    } while (token.kind != SCOPE_TOKEN);
 }

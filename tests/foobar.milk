@@ -1,4 +1,4 @@
-include <stdio.h>
+#include <stdio.h>
 
   /* WARNING */
 int ernal,  magic;
@@ -46,4 +46,4 @@ struct Jinkela:
     element Phosphorus,
     element Potassium
 
-#
+::

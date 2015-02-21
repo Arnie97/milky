@@ -8,6 +8,7 @@
 #define retpos { return pos_in_token; }
 
 static char indents[MAX_INDENTATION_LEVEL] = { 0 }, current_indent;
+static unsigned int line_start_pos, row = 1;
 
 int
 get_token(Token *token)
@@ -42,6 +43,7 @@ get_token(Token *token)
     }
 
     token->kind = BAD_TOKEN;
+    token->row = row;
 
     while ((current_char = line[line_pos]) != '\0') {
         last_char = line[line_pos - 1];
@@ -53,6 +55,8 @@ get_token(Token *token)
         }
         if (isspace(current_char)) {
             if (current_char == '\n') {
+                row++;
+                line_start_pos = line_pos;
                 append;
                 if (last_char == '\\') {
                     token->kind = ESCAPED_LINE_TOKEN;
@@ -67,6 +71,7 @@ get_token(Token *token)
                     continue;
                 }
                 token->kind = END_OF_LINE_TOKEN;
+                token->row++;
                 current_indent = 0;
                 retpos;
             }
@@ -232,4 +237,5 @@ get_whitespace(Token *token, int pos_in_token)
         append;
     }
     token->str[pos_in_token] = '\0';
+    token->column = line_pos - line_start_pos - pos_in_token;
 }

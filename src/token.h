@@ -39,6 +39,7 @@ typedef struct {
     TokenKind kind;
     char type;
     char str[MAX_TOKEN_SIZE];
+    unsigned int row, column;
 } Token;
 
 #endif /* TOKEN_H_INCLUDED */
