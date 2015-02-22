@@ -22,6 +22,7 @@ get_token(Token *token)
 
     token->kind = BAD_TOKEN;
     token->row = row;
+    token->column = line_pos - line_start_pos;
 
     while ((current_char = line[line_pos]) != '\0') {
         last_char = line[line_pos - 1];
@@ -49,7 +50,6 @@ get_token(Token *token)
                     continue;
                 }
                 token->kind = END_OF_LINE_TOKEN;
-                token->row++;
                 retpos;
             }
             append;
@@ -208,5 +208,4 @@ get_whitespace(Token *token, int pos_in_token)
         append;
     }
     token->str[pos_in_token] = '\0';
-    token->column = line_pos - line_start_pos - pos_in_token;
 }

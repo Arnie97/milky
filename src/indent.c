@@ -95,33 +95,30 @@ get_indent(Token *token)
     }
 
     // indent just settled, token not inserted
-    char last_indent = strlen(indents), *outer_indent;
-
-    if (last_indent != 0) {
-        last_indent = indents[last_indent - 1];
-    }
+    char indent_levels = strlen(indents), *outer_indent;
+    char last_indent = indent_levels? indents[indent_levels - 1]: 0;
     char indent_change = current_indent - last_indent;
     if (indent_change > 0) {
         token->kind = INDENT_TOKEN;
         token->str[0] = '\0';
         printf("\033[32mINDENT %d->%d\033[0m> ", last_indent, current_indent);
-        indents[strlen(indents)] = current_indent;
+        indents[indent_levels] = current_indent;
         return;
     }
     if (indent_change < 0 || multiple_unindents) {
         token->kind = UNINDENT_TOKEN;
         token->str[0] = '\0';
-        if (current_indent == indents[strlen(indents) - 2]) {
+        if (current_indent == indents[indent_levels - 2]) {
             multiple_unindents = 0;
-            printf("\033[31mMeow!\033[0m");
         } else if ((outer_indent = strchr(indents, current_indent)) != NULL) {
             multiple_unindents = 1;
+            printf("\033[31mMeow!\033[0m");
         } else {
             fprintf(stderr, "Unindent does not match any outer indentation level.\n");
             exit(3);
         }
         printf("\033[33mUNINDENT %d->%d\033[0m> ", last_indent, current_indent);
-        indents[strlen(indents) - 1] = 0;
+        indents[indent_levels - 1] = 0;
         return;
     }
 
