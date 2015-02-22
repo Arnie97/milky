@@ -1,7 +1,10 @@
-#include "milky.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "token.h"
-#include "lexer.h"
 #include "queue.h"
+#include "lexer.h"
 #include "indent.h"
 
 Queue *look_ahead_tokens;

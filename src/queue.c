@@ -1,3 +1,6 @@
+#include <stdlib.h>
+
+#include "token.h"
 #include "queue.h"
 
 Queue *

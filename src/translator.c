@@ -1,4 +1,6 @@
-#include "milky.h"
+#include <stdio.h>
+
+#include "input.h"
 #include "token.h"
 #include "indent.h"
 #include "translator.h"

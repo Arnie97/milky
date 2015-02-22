@@ -1,7 +1,8 @@
-#include "milky.h"
-#include "token.h"
+#include <stdio.h>
+#include <string.h>
+
+#include "input.h"
 #include "translator.h"
-#include "main.h"
 
 char line[LINE_BUF_SIZE] = "~";
 int line_pos = 1;
