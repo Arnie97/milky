@@ -7,40 +7,13 @@
 #define subtract { token->str[--pos_in_token] = '\0'; line_pos--; }
 #define retpos { return pos_in_token; }
 
-static char indents[MAX_INDENTATION_LEVEL] = { 0 }, current_indent;
 static unsigned int line_start_pos, row = 1;
 
 int
 get_token(Token *token)
 {
     int pos_in_token = 0;
-    char last_char, current_char, next_char, *outer_indent;
-
-    char last_indent = strlen(indents);
-    if (last_indent != 0) {
-        last_indent = indents[last_indent - 1];
-    }
-    char indent_change = current_indent - last_indent;
-    if (indent_change > 0) {
-        token->kind = INDENT_TOKEN;
-        printf("INDENT>>%d\n", indent_change);
-        indents[strlen(indents)] = current_indent;
-        retpos;
-    }
-    if (indent_change < 0) {
-        token->kind = UNINDENT_TOKEN;
-        if (current_indent == indents[strlen(indents) - 2]) {
-            ;
-        } else if ((outer_indent = strchr(indents, current_indent)) != NULL) {
-            current_indent = last_indent;
-        } else {
-            fprintf(stderr, "Unindent does not match any outer indentation level.\n");
-            exit(3);
-        }
-        printf("UNINDENT<<%d\n", -indent_change);
-        indents[strlen(indents) - 1] = 0;
-        retpos;
-    }
+    char last_char, current_char, next_char;
 
     token->kind = BAD_TOKEN;
     token->row = row;
@@ -72,7 +45,6 @@ get_token(Token *token)
                 }
                 token->kind = END_OF_LINE_TOKEN;
                 token->row++;
-                current_indent = 0;
                 retpos;
             }
             append;
@@ -220,9 +192,6 @@ void
 get_whitespace(Token *token, int pos_in_token)
 {
     char current_char;
-    if (token->kind == MULTILINE_COMMENT_TOKEN) {
-        current_indent = pos_in_token - (int)(strrchr(token->str, '\n') - token->str + 1) / sizeof(char);
-    }
     while ((current_char = line[line_pos]) != '\0') {
         if (pos_in_token >= MAX_TOKEN_SIZE) {
             fprintf(stderr, "Whitespace too long.\n");
@@ -230,9 +199,6 @@ get_whitespace(Token *token, int pos_in_token)
         }
         if (!isspace(current_char) || current_char == '\n') {
             break;
-        }
-        if (token->kind == END_OF_LINE_TOKEN || token->kind == MULTILINE_COMMENT_TOKEN) {
-            current_indent++;
         }
         append;
     }

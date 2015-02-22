@@ -29,6 +29,7 @@ typedef enum {
     COMMA_TOKEN = ',',
     QUESTION_TOKEN = '?',
     COLON_TOKEN = ':',
+    ESCAPED_COLON_TOKEN = '"',
     SEMICOLON_TOKEN = ';',
     SHARP_TOKEN = '#'
 } TokenKind;
