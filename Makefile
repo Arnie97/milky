@@ -1,7 +1,10 @@
 .PHONY: test build clean distclean
 
+ifeq ($(OS),Windows_NT)
+CC       := gcc
+endif
 CC       ?= gcc
-CCFLAGS  ?= -std=c99 -Wall -Wpedantic -Wno-switch -O3
+CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -O3
 MILKYC   ?= milky
 
 SRCDIR   ?= src
