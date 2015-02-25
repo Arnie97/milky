@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 CC       := gcc
 endif
 CC       ?= gcc
-CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -O3
+CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -O3 -D _DEBUG
 MILKYC   ?= milky
 
 SRCDIR   ?= src

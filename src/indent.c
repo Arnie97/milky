@@ -46,10 +46,10 @@ void
 next_token(Token *token, char force_look_ahead)
 {
     if (!force_look_ahead && look_ahead_tokens->size) {
-        printf("pop");
+        dprintf(("pop"));
         dequeue(look_ahead_tokens, token);
     } else {
-        printf("fwd");
+        dprintf(("fwd"));
         get_whitespace(token, get_token(token));
         get_escaped(token);
     }
@@ -58,7 +58,7 @@ next_token(Token *token, char force_look_ahead)
 void
 store_token(Token *token)
 {
-    printf("push> ");
+    dprintf(("push> "));
     enqueue(look_ahead_tokens, *token);
 }
 
@@ -70,7 +70,7 @@ get_indent(Token *token)
 
     while (!indent_settled) {
         next_token(token, 1);
-        printf("2> ");
+        dprintf(("2> "));
     hell:
         switch (token->kind) {
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
@@ -101,7 +101,7 @@ get_indent(Token *token)
     if (indent_change > 0) {
         token->kind = INDENT_TOKEN;
         token->str[0] = '\0';
-        printf("\033[32mINDENT %d->%d\033[0m> ", last_indent, current_indent);
+        dprintf(("\033[32mINDENT %d->%d\033[0m> ", last_indent, current_indent));
         indents[indent_levels] = current_indent;
         return;
     }
@@ -112,12 +112,12 @@ get_indent(Token *token)
             multiple_unindents = 0;
         } else if ((outer_indent = strchr(indents, current_indent)) != NULL) {
             multiple_unindents = 1;
-            printf("\033[31mMeow!\033[0m");
+            dprintf(("\033[31mMeow!\033[0m"));
         } else {
             fprintf(stderr, "Unindent does not match any outer indentation level.\n");
             exit(3);
         }
-        printf("\033[33mUNINDENT %d->%d\033[0m> ", last_indent, current_indent);
+        dprintf(("\033[33mUNINDENT %d->%d\033[0m> ", last_indent, current_indent));
         indents[indent_levels - 1] = 0;
         return;
     }
@@ -125,13 +125,13 @@ get_indent(Token *token)
     // indent just settled
     if (look_ahead_tokens->size) {
         next_token(token, 0);
-        printf("1> ");
+        dprintf(("1> "));
         return;
     }
 
     // indent settled before
     next_token(token, 0);
-    printf("3> ");
+    dprintf(("3> "));
     switch (token->kind) {
     case END_OF_LINE_TOKEN:
     case MULTILINE_COMMENT_TOKEN:
