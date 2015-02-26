@@ -1,7 +1,7 @@
 #ifndef KEYWORD_H_INCLUDED
 #define KEYWORD_H_INCLUDED
 
-static char *keywords[14] = {
+static char *keywords[15] = {
     "if",
     "else",
     "elif",
@@ -15,7 +15,8 @@ static char *keywords[14] = {
     "fallthrough",
     "pass",
     "enum",
-    "struct"
+    "struct",
+    "union"
 };
 
 #endif /* KEYWORD_H_INCLUDED */
