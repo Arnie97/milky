@@ -9,7 +9,7 @@
 
 Queue *look_ahead_tokens;
 
-void
+static void
 get_escaped(Token *token)
 {
     static char ternary_expressions, unclosed_brackets;
@@ -42,7 +42,7 @@ get_escaped(Token *token)
     }
 }
 
-void
+static void
 next_token(Token *token, char force_look_ahead)
 {
     if (!force_look_ahead && look_ahead_tokens->size) {
@@ -55,7 +55,7 @@ next_token(Token *token, char force_look_ahead)
     }
 }
 
-void
+static void
 store_token(Token *token)
 {
     dprintf(("push> "));

@@ -1,18 +1,18 @@
 #include <stdio.h>
 
   /* WARNING */
-int ernal,  magic;
-void  if__removed;
+int ernal,  magic
+void  if__removed
 
 enum SecretsBureau:
     StrawStraw,
     MiaoMiao
 
 int main(int argc, char const *argv[]):
-    short pants = 1989-06-04;               // blah blah blah
-    long trousers = 0xC0ffee / 0xCafe;
+    short pants = 1989-06-04               // blah blah blah
+    long trousers = 0xC0ffee / 0xCafe
     int foo; char *piyo = "abc \" def"
-    char baz = 'one + two \' @';
+    char baz = 'one + two \' @'
 
     pants += trousers *= 0x1997
     scanf("%d %d", &foo, &bar)
@@ -30,11 +30,11 @@ comment */  switch:
             default:
 /* weird! */    printf("foo is unknown\n")
             foo += bar
-    elseif foo != 9:
+    elif foo != 9:
         for int i = 0;i < 10;++i:
             printf("%d ", i)
     else:
-        until foo > 0:
+        repeat foo > 0:
             foo -= bar
         printf("foo: %d, bar: %d\n", foo, bar)
     return 0
@@ -42,8 +42,8 @@ comment */  switch:
     
 typedef void element
 struct Jinkela:
-    element Nitrogen,
-    element Phosphorus,
+    element Nitrogen
+    element Phosphorus
     element Potassium
 
 ::

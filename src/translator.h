@@ -2,6 +2,28 @@
 #define TRANSLATOR_H_INCLUDED
 
 #define MAX_LOOK_AHEAD_TOKENS (20)
+#define MAX_INDENT_LEVELS (20)
+
+typedef enum {
+    INITIAL_STATUS,
+    AFTER_KEYWORD,
+    BEFORE_COLON,
+    BEFORE_INDENT,
+    INLINE_STATEMENT,
+    BEFORE_UNINDENT,
+    PREPROCESSOR,
+} TranslatorStatus;
+
+typedef enum {
+    UNKNOWN,
+    FUNCTION_BLOCK,
+    IF_BLOCK,
+    ELSE_BLOCK,
+    SWITCH_BLOCK,
+    CASE_BLOCK,
+    REPEAT_BLOCK,
+    STRUCT_BLOCK
+} IndentStatus;
 
 void parse_file(void);
 
