@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 
 #include "input.h"
 #include "token.h"
@@ -11,7 +10,11 @@
 
 static Token look_ahead_token;
 
-static void
+static void parse_statement(Token *, TranslatorStatus *, IndentStatus *);
+static void parse_block(Token *, TranslatorStatus);
+static int parse_expression(void);
+
+static inline void
 next_token(Token *token)
 {
     if (look_ahead_token.type == NONEXISTENT) {
@@ -22,7 +25,7 @@ next_token(Token *token)
     }
 }
 
-static void
+static inline void
 store_token(Token *token)
 {
     look_ahead_token = *token;
@@ -44,7 +47,7 @@ parse_file(void)
     look_ahead_queue(DESTROY);
 }
 
-void
+static void
 parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 {
     do {
@@ -103,7 +106,7 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
     throw(0, "end!", NULL);
 }
 
-void
+static void
 parse_block(Token *token, TranslatorStatus status)
 {
     IndentStatus pending = UNKNOWN;
@@ -128,7 +131,6 @@ parse_block(Token *token, TranslatorStatus status)
             pending = SWITCH_BLOCK;
             fputs(token->str, stdout);
             status = BEFORE_COLON;
-            strcat(token->str, "(");
             break;
         case 8: // case 9, 7: statement
         case 9: // default: statement
@@ -169,6 +171,9 @@ parse_block(Token *token, TranslatorStatus status)
             case BEFORE_COLON:
                 status = BEFORE_INDENT;
                 switch (pending) {
+                case SWITCH_BLOCK:
+                    putchar('(');
+                    continue;
                 case CASE_BLOCK:
                     break;
                 case IF_BLOCK:
@@ -221,7 +226,7 @@ parse_block(Token *token, TranslatorStatus status)
     }
 }
 
-int
+static inline int
 parse_expression(void)
 {
     int token_count = 0;

@@ -42,7 +42,7 @@ get_escaped(Token *token)
     }
 }
 
-static void
+static inline void
 next_token(Token *token, char force_look_ahead)
 {
     if (!force_look_ahead && look_ahead_tokens->size) {
@@ -53,7 +53,7 @@ next_token(Token *token, char force_look_ahead)
     }
 }
 
-static void
+static inline void
 store_token(Token *token)
 {
     enqueue(look_ahead_tokens, *token);
