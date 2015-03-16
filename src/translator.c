@@ -38,7 +38,7 @@ parse_file(void)
     look_ahead_queue(INIT);
     dputs("start!");
     for (;;) {
-        token.type = NONEXISTENT;
+        dprintf(("\033[32m[TL46]\033[0m"));
         parse_statement(&token, &status, &pending);
     }
     look_ahead_queue(DESTROY);
@@ -47,7 +47,6 @@ parse_file(void)
 void
 parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 {
-    char top_level = (token->type == NONEXISTENT)? 1: 0;
     do {
         parse_expression();
         next_token(token);
@@ -57,11 +56,9 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
         case INDENT_TOKEN:
             throw(32, "Unexpected indent", token);
         case UNINDENT_TOKEN:
+            dprintf(("\033[31m[UN68]\033[0m"));
             store_token(token);
-            if (!top_level) {
-                return;
-            }
-            break;
+            return;
         case KEYWORD_TOKEN:
             switch (token->type) {
             case 4: // do
@@ -198,6 +195,7 @@ parse_block(Token *token, TranslatorStatus status)
             parse_statement(token, &status, &pending);
             continue;
         case UNINDENT_TOKEN:
+            dprintf(("\033[33m[UN215]\033[0m"));
             switch (pending) {
             case SWITCH_BLOCK:
                 putchar(')');
