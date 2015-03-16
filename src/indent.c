@@ -46,10 +46,8 @@ static void
 next_token(Token *token, char force_look_ahead)
 {
     if (!force_look_ahead && look_ahead_tokens->size) {
-        dprintf(("pop"));
         dequeue(look_ahead_tokens, token);
     } else {
-        dprintf(("fwd"));
         get_whitespace(token, get_token(token));
         get_escaped(token);
     }
@@ -58,7 +56,6 @@ next_token(Token *token, char force_look_ahead)
 static void
 store_token(Token *token)
 {
-    dprintf(("push> "));
     enqueue(look_ahead_tokens, *token);
 }
 
@@ -70,7 +67,6 @@ get_indent(Token *token)
 
     while (!indent_settled) {
         next_token(token, 1);
-        dprintf(("2> "));
     hell:
         switch (token->kind) {
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
@@ -123,13 +119,11 @@ get_indent(Token *token)
     // indent just settled
     if (look_ahead_tokens->size) {
         next_token(token, 0);
-        dprintf(("1> "));
         return;
     }
 
     // indent settled before
     next_token(token, 0);
-    dprintf(("3> "));
     switch (token->kind) {
     case END_OF_LINE_TOKEN:
     case MULTILINE_COMMENT_TOKEN:

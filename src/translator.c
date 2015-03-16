@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "input.h"
@@ -16,20 +15,16 @@ static void
 next_token(Token *token)
 {
     if (look_ahead_token.type == NONEXISTENT) {
-        dprintf(("tr_fw> "));
         get_indent(token);
     } else {
-        dprintf(("tr_po> "));
         *token = look_ahead_token;
         look_ahead_token.type = NONEXISTENT;
     }
-    dprintf((token->str));
 }
 
 static void
 store_token(Token *token)
 {
-    dprintf(("tr_pu> "));
     look_ahead_token = *token;
 }
 
@@ -107,10 +102,8 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
         default:
             dputs("Unhandled default!");
         }
-        fputs(token->str, stdout);
     } while (token->kind != SCOPE_TOKEN);
-    puts("~~~~~~~~~~~~~~~~~~~~");
-    exit(0);
+    throw(0, "end!", NULL);
 }
 
 void
@@ -239,7 +232,6 @@ parse_expression(void)
         next_token(&token);
         switch (token.kind) {
         case BAD_TOKEN:
-            dputs("BADBAD");
         case INDENT_TOKEN:
         case UNINDENT_TOKEN:
         case KEYWORD_TOKEN:
