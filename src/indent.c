@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "token.h"
 #include "queue.h"
+#include "error.h"
 #include "lexer.h"
 #include "indent.h"
 
@@ -86,8 +86,7 @@ get_indent(Token *token)
             store_token(token);
             continue;
         case ESCAPED_LINE_TOKEN:
-            fprintf(stderr, "Escaping an empty line.\n");
-            exit(14);
+            throw(21, "Escaping an empty line", token);
         default:
             indent_settled = 1;
             store_token(token);
@@ -114,8 +113,7 @@ get_indent(Token *token)
             multiple_unindents = 1;
             dprintf(("\033[31mMeow!\033[0m"));
         } else {
-            fprintf(stderr, "Unindent does not match any outer indentation level.\n");
-            exit(3);
+            throw(22, "Unindent does not match any outer indentation level", token);
         }
         dprintf(("\033[33mUNINDENT %d->%d\033[0m> ", last_indent, current_indent));
         indents[indent_levels - 1] = 0;

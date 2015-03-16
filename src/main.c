@@ -6,6 +6,7 @@
 
 char line[LINE_BUF_SIZE] = "~";
 int line_pos = 1;
+char *file_name = NULL;
 
 int
 main(int argc, char **argv)
@@ -14,7 +15,8 @@ main(int argc, char **argv)
         fprintf(stderr, "No input files.\n");
         return 5;
     }
-    FILE *fp = fopen(argv[1], "r");
+    file_name = argv[1];
+    FILE *fp = fopen(file_name, "r");
     if (fp == NULL) {
         fprintf(stderr, "Test file not found!\n");
         return 6;

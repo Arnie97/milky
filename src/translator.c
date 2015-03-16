@@ -4,6 +4,7 @@
 
 #include "input.h"
 #include "token.h"
+#include "error.h"
 #include "indent.h"
 #include "translator.h"
 
@@ -56,11 +57,9 @@ parse_statement(Token *token, TranslatorStatus *status)
         next_token(token);
         switch (token->kind) {
         case BAD_TOKEN:
-            fprintf(stderr, "Unhandled token: %s", token->str);
-            exit(8);
+            throw(31, "Unhandled token", token);
         case INDENT_TOKEN:
-            fprintf(stderr, "Unexpected indent.\n");
-            exit(10);
+            throw(32, "Unexpected indent", token);
         case UNINDENT_TOKEN:
             store_token(token);
             if (!top_level) {
@@ -92,8 +91,7 @@ parse_statement(Token *token, TranslatorStatus *status)
             /* fallthrough; */
         case MULTILINE_COMMENT_TOKEN:
             if (*status == BEFORE_INDENT) {
-                fprintf(stderr, "Expected indent.\n");
-                exit(13);
+                throw(33, "Expected indent", token);
             } else if (*status != PREPROCESSOR) {
                 putchar(';');
             }
@@ -152,9 +150,7 @@ parse_block(Token *token, TranslatorStatus status)
                 status = BEFORE_COLON;
                 break;
             default:
-                fprintf(stderr, "Unexpected keyword in this context:\n");
-                fprintf(stderr, "Unexpected 'case' without 'switch'\n");
-                exit(15);
+                throw(34, "Unexpected keyword in this context", token);
             }
         case 1: // else { statement }
             pending = ELSE_BLOCK;
@@ -178,8 +174,7 @@ parse_block(Token *token, TranslatorStatus status)
         case COLON_TOKEN:
             switch (status) {
             case AFTER_KEYWORD:
-                fprintf(stderr, "Expected conditions before colon.\n");
-                exit(11);
+                throw(35, "Expected conditions before colon", token);
             case BEFORE_COLON:
                 status = BEFORE_INDENT;
                 switch (pending) {
@@ -198,14 +193,12 @@ parse_block(Token *token, TranslatorStatus status)
                 }
                 break;
             default:
-                fprintf(stderr, "Unexpected colons.\n");
-                exit(12);
+                throw(36, "Unexpected colons", token);
             }
             continue;
         case INDENT_TOKEN:
             if (status != BEFORE_INDENT) {
-                fprintf(stderr, "Unexpected indent.\n");
-                exit(10);
+                throw(32, "Unexpected indent", token);
             }
             status = BEFORE_UNINDENT;
             parse_statement(token, &status);

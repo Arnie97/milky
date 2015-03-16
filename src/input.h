@@ -5,5 +5,6 @@
 
 extern char line[LINE_BUF_SIZE];
 extern int line_pos;
+extern char *file_name;
 
 #endif /* INPUT_H_INCLUDED */

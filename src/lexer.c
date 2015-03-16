@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 #include "input.h"
 #include "token.h"
 #include "keyword.h"
+#include "error.h"
 #include "lexer.h"
 
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
@@ -29,8 +29,7 @@ get_token(Token *token)
         next_char = line[line_pos + 1];
 
         if (pos_in_token >= MAX_TOKEN_SIZE) {
-            fprintf(stderr, "Token too long.\n");
-            exit(1);
+            throw(11, "Token too long", token);
         }
         if (isspace(current_char)) {
             if (current_char == '\n') {
@@ -199,8 +198,7 @@ get_whitespace(Token *token, int pos_in_token)
     char current_char;
     while ((current_char = line[line_pos]) != '\0') {
         if (pos_in_token >= MAX_TOKEN_SIZE) {
-            fprintf(stderr, "Whitespace too long.\n");
-            exit(2);
+            throw(12, "Whitespace too long", token);
         }
         if (!isspace(current_char) || current_char == '\n') {
             break;
