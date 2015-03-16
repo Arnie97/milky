@@ -37,19 +37,20 @@ void
 parse_file(void)
 {
     Token token;
-    TranslatorStatus status;
+    TranslatorStatus status = INITIAL_STATUS;
+    IndentStatus pending = UNKNOWN;
     look_ahead_token.type = NONEXISTENT;
     look_ahead_queue(INIT);
     dputs("start!");
     for (;;) {
         token.type = NONEXISTENT;
-        parse_statement(&token, &status);
+        parse_statement(&token, &status, &pending);
     }
     look_ahead_queue(DESTROY);
 }
 
 void
-parse_statement(Token *token, TranslatorStatus *status)
+parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 {
     char top_level = (token->type == NONEXISTENT)? 1: 0;
     do {
@@ -85,15 +86,15 @@ parse_statement(Token *token, TranslatorStatus *status)
             parse_block(token, BEFORE_COLON);
             continue;
         case END_OF_LINE_TOKEN:
-            if (*status == PREPROCESSOR) {
-                *status = INITIAL_STATUS;
-            }
-            /* fallthrough; */
         case MULTILINE_COMMENT_TOKEN:
             if (*status == BEFORE_INDENT) {
                 throw(33, "Expected indent", token);
             } else if (*status != PREPROCESSOR) {
-                putchar(';');
+                if (*pending != STRUCT_BLOCK) {
+                    putchar(';');
+                }
+            } else if (token->kind == END_OF_LINE_TOKEN) {
+                *status = INITIAL_STATUS;
             }
             fputs(token->str, stdout);
 
@@ -201,7 +202,7 @@ parse_block(Token *token, TranslatorStatus status)
                 throw(32, "Unexpected indent", token);
             }
             status = BEFORE_UNINDENT;
-            parse_statement(token, &status);
+            parse_statement(token, &status, &pending);
             continue;
         case UNINDENT_TOKEN:
             switch (pending) {
@@ -247,9 +248,6 @@ parse_expression(void)
         case END_OF_LINE_TOKEN:
             store_token(&token);
             return token_count;
-        case LINE_COMMENT_TOKEN:
-        case BLOCK_COMMENT_TOKEN:
-            fputs(token.str, stdout);
         default:
             fputs(token.str, stdout);
             token_count++;
