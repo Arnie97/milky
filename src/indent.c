@@ -62,7 +62,7 @@ store_token(Token *token)
 void
 get_indent(Token *token)
 {
-    static char indent_settled, current_indent;
+    static char indent_settled, current_indent, indent_just_changed;
     static char indents[MAX_INDENTATION_LEVEL] = { 0 };
 
     while (!indent_settled) {
@@ -98,6 +98,7 @@ get_indent(Token *token)
         token->str[0] = '\0';
         dprintf(("\033[32m[IN %d->%d]\033[0m", last_indent, current_indent));
         indents[indent_levels] = current_indent;
+        indent_just_changed = 1;
         return;
     }
     if (indent_change < 0) {
@@ -108,12 +109,21 @@ get_indent(Token *token)
         }
         dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent));
         indents[indent_levels - 1] = 0;
+        indent_just_changed = 1;
         return;
     }
 
     // indent just settled
     if (look_ahead_tokens->size) {
         next_token(token, 0);
+        if (indent_just_changed) {
+            if (token->kind == END_OF_LINE_TOKEN) {
+                token->kind = ESCAPED_LINE_TOKEN;
+            } else {
+                token->kind = BLOCK_COMMENT_TOKEN;
+            }
+            indent_just_changed = 0;
+        }
         return;
     }
 
