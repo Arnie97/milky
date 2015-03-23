@@ -85,7 +85,7 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             if (*status == BEFORE_INDENT) {
                 throw(33, "Expected indent", token);
             } else if (*status != PREPROCESSOR) {
-                if (*pending != STRUCT_BLOCK) {
+                if (*pending != ENUM_BLOCK) {
                     putchar(';');
                 }
             } else if (token->kind == END_OF_LINE_TOKEN) {
@@ -127,8 +127,8 @@ parse_block(Token *token, TranslatorStatus status)
                 throw(37, "Expected conditions before colon", token);
             }
             break;
-        case 12: case 13: case 14: // typedef struct { list } name;
-            pending = STRUCT_BLOCK;
+        case 12: // typedef enum { list } name;
+            pending = ENUM_BLOCK;
             fputs(token->str, stdout);
             parse_expression();
             status = BEFORE_COLON;
@@ -156,12 +156,13 @@ parse_block(Token *token, TranslatorStatus status)
             fputs(token->str, stdout);
             status = BEFORE_COLON;
             break;
-        case 6: // repeat;
+        case 6: // repeat (cond) { statement }
             pending = REPEAT_BLOCK;
             fputs(token->str, stdout);
             parse_expression();
             status = BEFORE_COLON;
             break;
+        case 13: case 14: // typedef struct { list } name;
         default:
             dputs("Unhandled keyword!");
         }
@@ -213,7 +214,7 @@ parse_block(Token *token, TranslatorStatus status)
                 putchar('{');
                 break;
             case REPEAT_BLOCK:
-            case STRUCT_BLOCK:
+            case ENUM_BLOCK:
                 printf("} while (%s);", "cond");
                 break;
             case FUNCTION_BLOCK:
