@@ -50,7 +50,7 @@ parse_file(void)
 static void
 parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 {
-    do {
+    for (;;) {
         parse_expression();
         next_token(token);
         switch (token->kind) {
@@ -91,6 +91,8 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             } else if (token->kind == END_OF_LINE_TOKEN) {
                 *status = INITIAL_STATUS;
             }
+            /* fallthrough; */
+        case ESCAPED_LINE_TOKEN:
             fputs(token->str, stdout);
 
             next_token(token);
@@ -99,11 +101,12 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             }
             store_token(token);
             continue;
+        case SCOPE_TOKEN:
+            throw(0, "end!", NULL);
         default:
             dputs("Unhandled default!");
         }
-    } while (token->kind != SCOPE_TOKEN);
-    throw(0, "end!", NULL);
+    }
 }
 
 static void
@@ -118,8 +121,11 @@ parse_block(Token *token, TranslatorStatus status)
             pending = IF_BLOCK;
             fputs(token->str, stdout);
             putchar('(');
-            parse_expression();
-            status = BEFORE_COLON;
+            if (parse_expression()) {
+                status = BEFORE_COLON;
+            } else {
+                throw(37, "Expected conditions before colon", token);
+            }
             break;
         case 12: case 13: case 14: // typedef struct { list } name;
             pending = STRUCT_BLOCK;
@@ -213,6 +219,9 @@ parse_block(Token *token, TranslatorStatus status)
             case FUNCTION_BLOCK:
             case IF_BLOCK:
             case ELSE_BLOCK:
+                if (status != PREPROCESSOR) {
+                    putchar(';');
+                }
                 putchar('}');
                 break;
             default:
@@ -241,8 +250,14 @@ parse_expression(void)
         case COLON_TOKEN:
         case MULTILINE_COMMENT_TOKEN:
         case END_OF_LINE_TOKEN:
+        case ESCAPED_LINE_TOKEN:
+        case SCOPE_TOKEN:
             store_token(&token);
             return token_count;
+        case LINE_COMMENT_TOKEN:
+        case BLOCK_COMMENT_TOKEN:
+            fputs(token.str, stdout);
+            continue;
         default:
             fputs(token.str, stdout);
             token_count++;

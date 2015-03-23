@@ -64,6 +64,7 @@ get_indent(Token *token)
 {
     static char indent_settled, current_indent, indent_just_changed;
     static char indents[MAX_INDENTATION_LEVEL] = { 0 };
+    char first_new_line = 1;
 
     while (!indent_settled) {
         next_token(token, 1);
@@ -71,10 +72,20 @@ get_indent(Token *token)
         switch (token->kind) {
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
             current_indent = strlen(token->str) - (int)(strrchr(token->str, '\n') - token->str + 1) / sizeof(char);
+            if (first_new_line) {
+                first_new_line = 0;
+            } else {
+                token->kind = BLOCK_COMMENT_TOKEN;
+            }
             store_token(token);
             continue;
         case END_OF_LINE_TOKEN: // empty line too
             current_indent = -1;
+            if (first_new_line) {
+                first_new_line = 0;
+            } else {
+                token->kind = ESCAPED_LINE_TOKEN;
+            }
             /* fallthrough; */
         case LINE_COMMENT_TOKEN:
         case BLOCK_COMMENT_TOKEN:
