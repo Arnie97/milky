@@ -129,48 +129,31 @@ parse_block(Token *token, TranslatorStatus status)
     IndentStatus pending = UNKNOWN;
     if (status == BEFORE_COLON) {
         pending = FUNCTION_BLOCK;
-    } else {
+    } else do {
         switch (token->type) {
         case 0: case 2: case 3: case 5: // if (cond) { statement }
             pending = IF_BLOCK;
             fputs(token->str, stdout);
             putchar('(');
-            if (parse_expression()) {
-                status = BEFORE_COLON;
-            } else {
-                throw(37, "Expected conditions before colon", token);
-            }
             break;
         case 6: // repeat (cond) { statement }
             pending = REPEAT_BLOCK;
             repeat_label = rand();
             printf("goto _repeat_%x; while (", repeat_label);
-            if (parse_expression()) {
-                status = BEFORE_COLON;
-            } else {
-                throw(37, "Expected conditions before colon", token);
-            }
             break;
         case 12: // typedef enum { list } name;
             pending = ENUM_BLOCK;
             fputs(token->str, stdout);
-            parse_expression();
-            status = BEFORE_COLON;
             break;
         case 13: case 14: // struct name { list };
             pending = STRUCT_BLOCK;
             fputs(token->str, stdout);
-            if (parse_expression()) {
-                status = BEFORE_COLON;
-            } else {
-                throw(37, "Expected conditions before colon", token);
-            }
             break;
         case 7: // switch (foo) { statement }
             pending = SWITCH_BLOCK;
             fputs(token->str, stdout);
             status = BEFORE_COLON;
-            break;
+            continue;
         case 8: // case 9, 7: statement
         case 9: // default: statement
             switch (pending) {
@@ -178,8 +161,6 @@ parse_block(Token *token, TranslatorStatus status)
             case CASE_BLOCK:
                 pending = CASE_BLOCK;
                 fputs(token->str, stdout);
-                parse_expression();
-                status = BEFORE_COLON;
                 break;
             default:
                 throw(34, "Unexpected keyword in this context", token);
@@ -188,11 +169,18 @@ parse_block(Token *token, TranslatorStatus status)
             pending = ELSE_BLOCK;
             fputs(token->str, stdout);
             status = BEFORE_COLON;
-            break;
+            continue;
         default:
             dputs("Unhandled keyword!");
+            continue;
         }
-    }
+
+        if (parse_expression()) {
+            status = BEFORE_COLON;
+        } else {
+            throw(35, "Expected conditions before colon", token);
+        }
+    } while (0);
 
     for (;;) {
         next_token(token);
