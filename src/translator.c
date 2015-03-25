@@ -131,10 +131,14 @@ parse_block(Token *token, TranslatorStatus status)
         pending = FUNCTION_BLOCK;
     } else do {
         switch (token->type) {
-        case 0: case 2: case 3: case 5: // if (cond) { statement }
+        case 0: case 3: case 5: // if (cond) { statement }
             pending = IF_BLOCK;
             fputs(token->str, stdout);
             putchar('(');
+            break;
+        case 2: // elif
+            pending = IF_BLOCK;
+            fputs("else if (", stdout);
             break;
         case 6: // repeat (cond) { statement }
             pending = REPEAT_BLOCK;
