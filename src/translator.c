@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "input.h"
 #include "token.h"
@@ -37,6 +38,7 @@ parse_file(void)
     Token token;
     TranslatorStatus status = INITIAL_STATUS;
     IndentStatus pending = UNKNOWN;
+    srand(RAND_MAX);
     look_ahead_token.type = NONEXISTENT;
     look_ahead_queue(INIT);
     dputs("start!");
@@ -123,6 +125,7 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 static void
 parse_block(Token *token, TranslatorStatus status)
 {
+    int repeat_label;
     IndentStatus pending = UNKNOWN;
     if (status == BEFORE_COLON) {
         pending = FUNCTION_BLOCK;
@@ -132,6 +135,16 @@ parse_block(Token *token, TranslatorStatus status)
             pending = IF_BLOCK;
             fputs(token->str, stdout);
             putchar('(');
+            if (parse_expression()) {
+                status = BEFORE_COLON;
+            } else {
+                throw(37, "Expected conditions before colon", token);
+            }
+            break;
+        case 6: // repeat (cond) { statement }
+            pending = REPEAT_BLOCK;
+            repeat_label = rand();
+            printf("goto _repeat_%x; while (", repeat_label);
             if (parse_expression()) {
                 status = BEFORE_COLON;
             } else {
@@ -167,12 +180,6 @@ parse_block(Token *token, TranslatorStatus status)
             fputs(token->str, stdout);
             status = BEFORE_COLON;
             break;
-        case 6: // repeat (cond) { statement }
-            pending = REPEAT_BLOCK;
-            fputs(token->str, stdout);
-            parse_expression();
-            status = BEFORE_COLON;
-            break;
         case 13: case 14: // typedef struct { list } name;
         default:
             dputs("Unhandled keyword!");
@@ -193,6 +200,9 @@ parse_block(Token *token, TranslatorStatus status)
                     putchar('(');
                     continue;
                 case CASE_BLOCK:
+                    break;
+                case REPEAT_BLOCK:
+                    printf(") { _repeat_%x: ", repeat_label);
                     break;
                 case IF_BLOCK:
                     putchar(')');
@@ -224,13 +234,13 @@ parse_block(Token *token, TranslatorStatus status)
                 putchar(')');
                 putchar('{');
                 break;
-            case REPEAT_BLOCK:
             case ENUM_BLOCK:
                 printf("} while (%s);", "cond");
                 break;
             case FUNCTION_BLOCK:
             case IF_BLOCK:
             case ELSE_BLOCK:
+            case REPEAT_BLOCK:
                 if (status != PREPROCESSOR) {
                     putchar(';');
                 }
