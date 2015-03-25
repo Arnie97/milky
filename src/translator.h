@@ -22,7 +22,8 @@ typedef enum {
     SWITCH_BLOCK,
     CASE_BLOCK,
     REPEAT_BLOCK,
-    ENUM_BLOCK
+    ENUM_BLOCK,
+    STRUCT_BLOCK
 } IndentStatus;
 
 void parse_file(void);

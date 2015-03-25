@@ -157,6 +157,15 @@ parse_block(Token *token, TranslatorStatus status)
             parse_expression();
             status = BEFORE_COLON;
             break;
+        case 13: case 14: // struct name { list };
+            pending = STRUCT_BLOCK;
+            fputs(token->str, stdout);
+            if (parse_expression()) {
+                status = BEFORE_COLON;
+            } else {
+                throw(37, "Expected conditions before colon", token);
+            }
+            break;
         case 7: // switch (foo) { statement }
             pending = SWITCH_BLOCK;
             fputs(token->str, stdout);
@@ -180,7 +189,6 @@ parse_block(Token *token, TranslatorStatus status)
             fputs(token->str, stdout);
             status = BEFORE_COLON;
             break;
-        case 13: case 14: // typedef struct { list } name;
         default:
             dputs("Unhandled keyword!");
         }
@@ -236,6 +244,13 @@ parse_block(Token *token, TranslatorStatus status)
                 break;
             case ENUM_BLOCK:
                 printf("} while (%s);", "cond");
+                break;
+            case STRUCT_BLOCK:
+                if (status != PREPROCESSOR) {
+                    putchar(';');
+                }
+                putchar('}');
+                putchar(';');
                 break;
             case FUNCTION_BLOCK:
             case IF_BLOCK:
