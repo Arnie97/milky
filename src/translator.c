@@ -50,6 +50,7 @@ parse_file(void)
 static void
 parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
 {
+    Token temp;
     for (;;) {
         parse_expression();
         next_token(token);
@@ -93,11 +94,21 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             }
             /* fallthrough; */
         case ESCAPED_LINE_TOKEN:
-            fputs(token->str, stdout);
-
-            next_token(token);
-            if (token->kind == SHARP_TOKEN) {
+            next_token(&temp);
+            if (temp.kind == SHARP_TOKEN) {
                 *status = PREPROCESSOR;
+            }
+            store_token(&temp);
+            /* fallthrough; */
+        case BLOCK_COMMENT_TOKEN:
+            fputs(token->str, stdout);
+            continue;
+        case LINE_COMMENT_TOKEN:
+            putchar(';');
+            fputs(token->str, stdout);
+            next_token(token);
+            if (token->kind == END_OF_LINE_TOKEN) {
+                token->kind = ESCAPED_LINE_TOKEN;
             }
             store_token(token);
             continue;
@@ -252,13 +263,11 @@ parse_expression(void)
         case MULTILINE_COMMENT_TOKEN:
         case END_OF_LINE_TOKEN:
         case ESCAPED_LINE_TOKEN:
+        case BLOCK_COMMENT_TOKEN:
+        case LINE_COMMENT_TOKEN:
         case SCOPE_TOKEN:
             store_token(&token);
             return token_count;
-        case LINE_COMMENT_TOKEN:
-        case BLOCK_COMMENT_TOKEN:
-            fputs(token.str, stdout);
-            continue;
         default:
             fputs(token.str, stdout);
             token_count++;
