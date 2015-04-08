@@ -1,31 +1,41 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "input.h"
+#include "token.h"
+#include "error.h"
 #include "translator.h"
 
-char line[LINE_BUF_SIZE] = "~";
 int line_pos = 1;
-char *file_name = NULL;
+char *line = NULL, *file_name = "milky";
 
 int
 main(int argc, char **argv)
 {
     if (argc == 1) {
-        fprintf(stderr, "No input files.\n");
-        return 5;
+        throw(1, "No input files", NULL);
     }
     file_name = argv[1];
     FILE *fp = fopen(file_name, "r");
     if (fp == NULL) {
-        fprintf(stderr, "Test file not found!\n");
-        return 6;
+        throw(2, "Unable to open specified file", NULL);
     }
-    char buffer[LINE_BUF_SIZE];
-    while (fgets(buffer, LINE_BUF_SIZE, fp) != NULL) {
-        strcat(line, buffer);
+
+    char c = '~';
+    int size = 0, i = 1;
+    while ((c = fgetc(fp)) != EOF) {
+        if (i > size - 4) {
+            if ((line = realloc(line, size += BUFFER_SIZE)) == NULL) {
+                throw(3, "Insufficient memory", NULL);
+            }
+        }
+        line[i++] = c;
     }
+    line[0] = '~';
+    for (size = i + 3; i < size; line[i++] = '\0');
     fclose(fp);
     parse_file();
+    free(line);
     return 0;
 }
