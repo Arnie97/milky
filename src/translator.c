@@ -241,44 +241,42 @@ parse_block(Token *token, TranslatorStatus status)
             continue;
         case UNINDENT_TOKEN:
             dprintf(("\033[33m[UN215]\033[0m"));
+
             switch (pending) {
             case SWITCH_BLOCK:
                 putchar(')');
                 putchar('{');
+                break;
+            case ENUM_BLOCK:
+                printf("} %s;", "token_t");
+                break;
+            default:
+                if (status != PREPROCESSOR) {
+                    putchar(';');
+                }
+                break;
+            }
+            switch (pending) {
+            case SWITCH_BLOCK:
                 if (token->type != 2 && token->type != 3) {
                     throw(38, "Expected 'case' or 'default'", token);
                 }
                 in_switch_context = token->type;
                 break;
             case CASE_BLOCK:
-                if (status != PREPROCESSOR) {
-                    putchar(';');
-                }
                 if (token->type != 2 && token->type != 3) {
                     putchar('}');
                     in_switch_context = 0;
                 }
                 break;
-            case ENUM_BLOCK:
-                printf("} while (%s);", "cond");
-                break;
             case STRUCT_BLOCK:
-                if (status != PREPROCESSOR) {
-                    putchar(';');
-                }
                 putchar('}');
                 putchar(';');
                 break;
-            case FUNCTION_BLOCK:
-            case IF_BLOCK:
-            case ELSE_BLOCK:
-            case REPEAT_BLOCK:
-                if (status != PREPROCESSOR) {
-                    putchar(';');
-                }
-                putchar('}');
+            case ENUM_BLOCK:
                 break;
             default:
+                putchar('}');
                 break;
             }
             return;
