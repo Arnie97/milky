@@ -94,8 +94,15 @@ get_indent(Token *token)
             continue;
         case ESCAPED_LINE_TOKEN:
             throw(21, "Escaping an empty line", token);
+        case KEYWORD_TOKEN:
+            if (token->type == 8) { // case 9, 7: statement
+                indent_settled = 1;
+            } else if (token->type == 9) { // default: statement
+                indent_settled = 2;
+            }
+            /* fallthrough; */
         default:
-            indent_settled = 1;
+            indent_settled++; // case: 2, default: 3, others: 1
             store_token(token);
         }
     }
@@ -106,6 +113,7 @@ get_indent(Token *token)
     char indent_change = current_indent - last_indent;
     if (indent_change > 0) {
         token->kind = INDENT_TOKEN;
+        token->type = indent_settled;
         token->str[0] = '\0';
         dprintf(("\033[32m[IN %d->%d]\033[0m", last_indent, current_indent));
         indents[indent_levels] = current_indent;
@@ -114,6 +122,7 @@ get_indent(Token *token)
     }
     if (indent_change < 0) {
         token->kind = UNINDENT_TOKEN;
+        token->type = indent_settled;
         token->str[0] = '\0';
         if (strchr(indents, current_indent) == NULL) {
             throw(22, "Unindent does not match any outer indentation level", token);

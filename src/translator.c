@@ -10,6 +10,7 @@
 #define NONEXISTENT (0x7F)
 
 static Token look_ahead_token;
+static int in_switch_context;
 
 static void parse_statement(Token *, TranslatorStatus *, IndentStatus *);
 static void parse_block(Token *, TranslatorStatus);
@@ -158,17 +159,27 @@ parse_block(Token *token, TranslatorStatus status)
             fputs(token->str, stdout);
             status = BEFORE_COLON;
             continue;
-        case 8: // case 9, 7: statement
         case 9: // default: statement
-            switch (pending) {
-            case SWITCH_BLOCK:
-            case CASE_BLOCK:
-                pending = CASE_BLOCK;
-                fputs(token->str, stdout);
-                break;
-            default:
+            pending = CASE_BLOCK;
+            fputs(token->str, stdout);
+            status = BEFORE_COLON;
+            continue;
+        case 8: // case 9, 7: statement
+            pending = CASE_BLOCK;
+            if (!in_switch_context) {
                 throw(34, "Unexpected keyword in this context", token);
             }
+            while (token->kind != COLON_TOKEN) {
+                if (token->kind == COMMA_TOKEN) {
+                    fputs(": case ", stdout);
+                } else {
+                    fputs(token->str, stdout);
+                }
+                next_token(token);
+            }
+            store_token(token);
+            status = BEFORE_COLON;
+            continue;
         case 1: // else { statement }
             pending = ELSE_BLOCK;
             fputs(token->str, stdout);
@@ -200,6 +211,7 @@ parse_block(Token *token, TranslatorStatus status)
                     putchar('(');
                     continue;
                 case CASE_BLOCK:
+                    fputs(token->str, stdout);
                     break;
                 case REPEAT_BLOCK:
                     printf(") { _repeat_%x: ", repeat_label);
@@ -233,6 +245,19 @@ parse_block(Token *token, TranslatorStatus status)
             case SWITCH_BLOCK:
                 putchar(')');
                 putchar('{');
+                if (token->type != 2 && token->type != 3) {
+                    throw(38, "Expected 'case' or 'default'", token);
+                }
+                in_switch_context = token->type;
+                break;
+            case CASE_BLOCK:
+                if (status != PREPROCESSOR) {
+                    putchar(';');
+                }
+                if (token->type != 2 && token->type != 3) {
+                    putchar('}');
+                    in_switch_context = 0;
+                }
                 break;
             case ENUM_BLOCK:
                 printf("} while (%s);", "cond");
