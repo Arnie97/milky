@@ -115,7 +115,7 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             }
             store_token(token);
             continue;
-        case SCOPE_TOKEN:
+        case END_OF_FILE_TOKEN:
             throw(0, "end!", NULL);
         default:
             dputs("Unhandled default!");
@@ -301,9 +301,9 @@ parse_expression(void)
         case MULTILINE_COMMENT_TOKEN:
         case END_OF_LINE_TOKEN:
         case ESCAPED_LINE_TOKEN:
+        case END_OF_FILE_TOKEN:
         case BLOCK_COMMENT_TOKEN:
         case LINE_COMMENT_TOKEN:
-        case SCOPE_TOKEN:
             store_token(&token);
             return token_count;
         default:

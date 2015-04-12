@@ -27,7 +27,7 @@ main(int argc, char **argv)
     char c = '~';
     int size = 0, i = 1;
     while ((c = fgetc(fp)) != EOF) {
-        if (i > size - 4) {
+        if (i > size - 5) {
             if ((line = realloc(line, size += BUFFER_SIZE)) == NULL) {
                 throw(3, "Insufficient memory", NULL);
             }
@@ -35,6 +35,7 @@ main(int argc, char **argv)
         line[i++] = c;
     }
     line[0] = '~';
+    line[i++] = '\n';
     for (size = i + 3; i < size; line[i++] = '\0');
     fclose(fp);
     parse_file();

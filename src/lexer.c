@@ -190,6 +190,11 @@ get_token(Token *token)
         append;
         retpos;
     }
+
+    if (current_char == '\0') {
+        token->kind = END_OF_FILE_TOKEN;
+        return 0;
+    }
 }
 
 void

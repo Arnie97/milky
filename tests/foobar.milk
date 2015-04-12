@@ -2,7 +2,7 @@
 
   /* WARNING */
 int ernal,  magic
-void  if__removed
+void  if__removed()
 
 enum SecretsBureau:
     StrawStraw,
@@ -11,7 +11,7 @@ enum SecretsBureau:
 int main(int argc, char const *argv[]):
     short pants = 1989-06-04               // blah blah blah
     long trousers = 0xC0ffee / 0xCafe
-    int foo; char *piyo = "abc \" def"
+    int foo, bar; char *piyo = "abc \" def"
     char baz = 'one + two \' @'
 
     pants += trousers *= 0x1997
@@ -39,11 +39,8 @@ comment */  switch:
         printf("foo: %d, bar: %d\n", foo, bar)
     return 0
 
-    
-typedef void element
+typedef int element
 struct Jinkela:
     element Nitrogen
     element Phosphorus
     element Potassium
-
-::
