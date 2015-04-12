@@ -9,6 +9,7 @@
 
 int line_pos = 1;
 char *line = NULL, *file_name = "milky";
+FILE *output;
 
 int
 main(int argc, char **argv)
@@ -17,6 +18,7 @@ main(int argc, char **argv)
         throw(1, "No input files", NULL);
     }
     file_name = argv[1];
+    output = stdout;
     FILE *fp = fopen(file_name, "r");
     if (fp == NULL) {
         throw(2, "Unable to open specified file", NULL);

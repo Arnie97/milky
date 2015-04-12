@@ -69,12 +69,12 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
         case KEYWORD_TOKEN:
             switch (token->type) {
             case 4: // do
-                fputs("_do", stdout);
+                fputs("_do", output);
                 continue;
             case 10: // fallthrough;
                 break;
             case 11: // pass;
-                putchar(';');
+                fputc(';', output);
                 continue;
             default:
                 parse_block(token, AFTER_KEYWORD);
@@ -90,7 +90,7 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
                 throw(33, "Expected indent", token);
             } else if (*status != PREPROCESSOR) {
                 if (*pending != ENUM_BLOCK) {
-                    putchar(';');
+                    fputc(';', output);
                 }
             } else if (token->kind == END_OF_LINE_TOKEN) {
                 *status = INITIAL_STATUS;
@@ -104,11 +104,11 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
             store_token(&temp);
             /* fallthrough; */
         case BLOCK_COMMENT_TOKEN:
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             continue;
         case LINE_COMMENT_TOKEN:
-            putchar(';');
-            fputs(token->str, stdout);
+            fputc(';', output);
+            fputs(token->str, output);
             next_token(token);
             if (token->kind == END_OF_LINE_TOKEN) {
                 token->kind = ESCAPED_LINE_TOKEN;
@@ -134,34 +134,34 @@ parse_block(Token *token, TranslatorStatus status)
         switch (token->type) {
         case 0: case 3: case 5: // if (cond) { statement }
             pending = IF_BLOCK;
-            fputs(token->str, stdout);
-            putchar('(');
+            fputs(token->str, output);
+            fputc('(', output);
             break;
         case 2: // elif
             pending = IF_BLOCK;
-            fputs("else if (", stdout);
+            fputs("else if (", output);
             break;
         case 6: // repeat (cond) { statement }
             pending = REPEAT_BLOCK;
             repeat_label = rand();
-            printf("goto _repeat_%x; while (", repeat_label);
+            fprintf(output, "goto _repeat_%x; while (", repeat_label);
             break;
         case 12: // typedef enum { list } name;
             pending = ENUM_BLOCK;
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             break;
         case 13: case 14: // struct name { list };
             pending = STRUCT_BLOCK;
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             break;
         case 7: // switch (foo) { statement }
             pending = SWITCH_BLOCK;
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
         case 9: // default: statement
             pending = CASE_BLOCK;
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
         case 8: // case 9, 7: statement
@@ -171,9 +171,9 @@ parse_block(Token *token, TranslatorStatus status)
             }
             while (token->kind != COLON_TOKEN) {
                 if (token->kind == COMMA_TOKEN) {
-                    fputs(": case ", stdout);
+                    fputs(": case ", output);
                 } else {
-                    fputs(token->str, stdout);
+                    fputs(token->str, output);
                 }
                 next_token(token);
             }
@@ -182,7 +182,7 @@ parse_block(Token *token, TranslatorStatus status)
             continue;
         case 1: // else { statement }
             pending = ELSE_BLOCK;
-            fputs(token->str, stdout);
+            fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
         default:
@@ -208,23 +208,23 @@ parse_block(Token *token, TranslatorStatus status)
                 status = BEFORE_INDENT;
                 switch (pending) {
                 case SWITCH_BLOCK:
-                    putchar('(');
+                    fputc('(', output);
                     continue;
                 case CASE_BLOCK:
-                    fputs(token->str, stdout);
+                    fputs(token->str, output);
                     break;
                 case REPEAT_BLOCK:
-                    printf(") { _repeat_%x: ", repeat_label);
+                    fprintf(output, ") { _repeat_%x: ", repeat_label);
                     break;
                 case IF_BLOCK:
-                    putchar(')');
+                    fputc(')', output);
                     /* fallthrough; */
                 default:
-                    putchar('{');
+                    fputc('{', output);
                 }
                 if (parse_expression()) {
                     status = INLINE_STATEMENT;
-                    putchar('}');
+                    fputc('}', output);
                     return;
                 }
                 break;
@@ -244,15 +244,14 @@ parse_block(Token *token, TranslatorStatus status)
 
             switch (pending) {
             case SWITCH_BLOCK:
-                putchar(')');
-                putchar('{');
+                fputs("){", output);
                 break;
             case ENUM_BLOCK:
-                printf("} %s;", "token_t");
+                fprintf(output, "} %s;", "token_t");
                 break;
             default:
                 if (status != PREPROCESSOR) {
-                    putchar(';');
+                    fputc(';', output);
                 }
                 break;
             }
@@ -265,18 +264,17 @@ parse_block(Token *token, TranslatorStatus status)
                 break;
             case CASE_BLOCK:
                 if (token->type != 2 && token->type != 3) {
-                    putchar('}');
+                    fputc('}', output);
                     in_switch_context = 0;
                 }
                 break;
             case STRUCT_BLOCK:
-                putchar('}');
-                putchar(';');
+                fputs("};", output);
                 break;
             case ENUM_BLOCK:
                 break;
             default:
-                putchar('}');
+                fputc('}', output);
                 break;
             }
             return;
@@ -309,7 +307,7 @@ parse_expression(void)
             store_token(&token);
             return token_count;
         default:
-            fputs(token.str, stdout);
+            fputs(token.str, output);
             token_count++;
         }
     }
