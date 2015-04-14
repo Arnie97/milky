@@ -161,6 +161,10 @@ parse_block(Token *token, TranslatorStatus status)
             continue;
         case 9: // default: statement
             pending = CASE_BLOCK;
+            if (!in_switch_context) {
+                throw(34, "Unexpected keyword in this context", token);
+            }
+            in_switch_context = 0;
             fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
@@ -263,7 +267,9 @@ parse_block(Token *token, TranslatorStatus status)
                 in_switch_context = token->type;
                 break;
             case CASE_BLOCK:
-                if (token->type != 2 && token->type != 3) {
+                if (in_switch_context && token->type == 2) {
+                    fputs("break;", output);
+                } else {
                     fputc('}', output);
                     in_switch_context = 0;
                 }

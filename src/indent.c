@@ -95,14 +95,12 @@ get_indent(Token *token)
         case ESCAPED_LINE_TOKEN:
             throw(21, "Escaping an empty line", token);
         case KEYWORD_TOKEN:
-            if (token->type == 8) { // case 9, 7: statement
-                indent_settled = 1;
-            } else if (token->type == 9) { // default: statement
-                indent_settled = 2;
+            if (token->type == 8 || token->type == 9) { // case, default
+                indent_settled++;
             }
             /* fallthrough; */
         default:
-            indent_settled++; // case: 2, default: 3, others: 1
+            indent_settled++; // case: 2, others: 1
             store_token(token);
         }
     }
