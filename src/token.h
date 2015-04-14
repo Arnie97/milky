@@ -10,7 +10,6 @@
 #endif
 
 typedef enum {
-    BAD_TOKEN,
     IDENTIFIER_TOKEN,
     KEYWORD_TOKEN,
     CHAR_TOKEN,

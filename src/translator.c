@@ -58,8 +58,6 @@ parse_statement(Token *token, TranslatorStatus *status, IndentStatus *pending)
         parse_expression();
         next_token(token);
         switch (token->kind) {
-        case BAD_TOKEN:
-            throw(31, "Unhandled token", token);
         case INDENT_TOKEN:
             throw(32, "Unexpected indent", token);
         case UNINDENT_TOKEN:
@@ -299,7 +297,6 @@ parse_expression(void)
     for (;;) {
         next_token(&token);
         switch (token.kind) {
-        case BAD_TOKEN:
         case INDENT_TOKEN:
         case UNINDENT_TOKEN:
         case KEYWORD_TOKEN:

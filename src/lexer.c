@@ -20,7 +20,7 @@ get_token(Token *token)
     int pos_in_token = 0;
     char last_char, current_char, next_char;
 
-    token->kind = BAD_TOKEN;
+    token->kind = END_OF_FILE_TOKEN;
     token->row = row;
     token->column = line_pos - line_start_pos;
 
@@ -190,11 +190,7 @@ get_token(Token *token)
         append;
         retpos;
     }
-
-    if (current_char == '\0') {
-        token->kind = END_OF_FILE_TOKEN;
-        return 0;
-    }
+    return 0;
 }
 
 void

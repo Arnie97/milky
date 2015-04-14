@@ -12,7 +12,7 @@ Queue *look_ahead_tokens;
 static void
 get_escaped(Token *token)
 {
-    static char ternary_expressions, unclosed_brackets;
+    static int ternary_expressions, unclosed_brackets;
     switch (token->kind) {
     case '(': case '[': case '{':
         unclosed_brackets++;
