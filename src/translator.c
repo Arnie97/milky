@@ -309,9 +309,12 @@ parse_expression(void)
         case LINE_COMMENT_TOKEN:
             store_token(&token);
             return token_count;
+        case SCOPE_TOKEN:
+            fputs(token.str + 1, output); // :: -> :
+            break;
         default:
             fputs(token.str, output);
-            token_count++;
         }
+        token_count++;
     }
 }

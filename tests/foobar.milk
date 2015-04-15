@@ -21,12 +21,13 @@ int main(int argc, char const *argv[]):
 comment */  switch:
                 foo
             case 1:
-                printf("foo = 1\n")
+                tag:: printf("foo = 1\n")
             case 2:
                 printf("foo = 2\n")
                 fallthrough
             case 0, 4, 6, 8:
                 printf("foo is even\n")
+                goto tag
             default:
 /* weird! */    printf("foo is unknown\n")
             foo += bar
