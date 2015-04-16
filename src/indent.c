@@ -62,7 +62,7 @@ store_token(Token *token)
 void
 get_indent(Token *token)
 {
-    static char indent_settled, current_indent, indent_just_changed;
+    static char indent_settled, settled_by, current_indent, indent_just_changed;
     static char indents[MAX_INDENTATION_LEVEL] = { 0 };
     char first_new_line = 1;
 
@@ -95,10 +95,10 @@ get_indent(Token *token)
         case ESCAPED_LINE_TOKEN:
             throw(21, "Escaping an empty line", token);
         case KEYWORD_TOKEN:
-            indent_settled = token->type;
+            settled_by = token->type;
             /* fallthrough; */
         default:
-            indent_settled++;
+            indent_settled = 1;
             store_token(token);
         }
     }
@@ -109,22 +109,33 @@ get_indent(Token *token)
     char indent_change = current_indent - last_indent;
     if (indent_change > 0) {
         token->kind = INDENT_TOKEN;
-        token->type = indent_settled - 1;
         token->str[0] = '\0';
         dprintf(("\033[32m[IN %d->%d]\033[0m", last_indent, current_indent));
         indents[indent_levels] = current_indent;
+
+        token->type = settled_by;
+        settled_by = 0;
+
         indent_just_changed = 1;
         return;
     }
     if (indent_change < 0) {
         token->kind = UNINDENT_TOKEN;
-        token->type = indent_settled - 1;
         token->str[0] = '\0';
         if (strchr(indents, current_indent) == NULL) {
             throw(22, "Unindent does not match any outer indentation level", token);
         }
         dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent));
         indents[indent_levels - 1] = 0;
+
+        if (indents[indent_levels - 2] == current_indent) {
+            token->type = settled_by;
+            settled_by = 0;
+        } else {
+            token->type = 0;
+            dputs("\033[33m[CLIFF]\033[0m");
+        }
+
         indent_just_changed = 1;
         return;
     }
