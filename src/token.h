@@ -1,14 +1,6 @@
 #ifndef TOKEN_H_INCLUDED
 #define TOKEN_H_INCLUDED
 
-#ifdef _DEBUG
-    #define dprintf(x) printf x
-    #define dputs(x) puts(x)
-#else
-    #define dprintf(x)
-    #define dputs(x)
-#endif
-
 typedef enum {
     IDENTIFIER_TOKEN,
     KEYWORD_TOKEN,

@@ -3,8 +3,8 @@
 
 static char *keywords[15] = {
     "if",
-    "else",
     "elif",
+    "else",
     "for",
     "do",
     "while",
