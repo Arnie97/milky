@@ -10,7 +10,7 @@
 #define NONEXISTENT (0x7F)
 
 static Token look_ahead_token;
-static int in_switch_context;
+static char context;
 
 static void parse_statement(Token *, TranslatorStatus *, IndentStatus *);
 static void parse_block(Token *, TranslatorStatus);
@@ -131,12 +131,15 @@ parse_block(Token *token, TranslatorStatus status)
     } else do {
         switch (token->type) {
         case 0: case 3: case 5: // if (cond) { statement }
-            pending = IF_BLOCK;
+            pending = token->type? WHILE_BLOCK: IF_BLOCK;
             fputs(token->str, output);
             fputc('(', output);
             break;
         case 2: // elif
-            pending = IF_BLOCK;
+            pending = ELIF_BLOCK;
+            if (!context) {
+                throw(34, "Unexpected keyword in this context", token);
+            }
             fputs("else if (", output);
             break;
         case 6: // repeat (cond) { statement }
@@ -158,17 +161,17 @@ parse_block(Token *token, TranslatorStatus status)
             status = BEFORE_COLON;
             continue;
         case 9: // default: statement
-            pending = CASE_BLOCK;
-            if (!in_switch_context) {
+            pending = DEFAULT_BLOCK;
+            if (!context) {
                 throw(34, "Unexpected keyword in this context", token);
             }
-            in_switch_context = 0;
+            context = 0;
             fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
         case 8: // case 9, 7: statement
             pending = CASE_BLOCK;
-            if (!in_switch_context) {
+            if (!context) {
                 throw(34, "Unexpected keyword in this context", token);
             }
             while (token->kind != COLON_TOKEN) {
@@ -184,6 +187,9 @@ parse_block(Token *token, TranslatorStatus status)
             continue;
         case 1: // else { statement }
             pending = ELSE_BLOCK;
+            if (!context) {
+                throw(34, "Unexpected keyword in this context", token);
+            }
             fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
@@ -199,7 +205,7 @@ parse_block(Token *token, TranslatorStatus status)
         }
     } while (0);
 
-    for (;;) {
+    for (context = 0;;) {
         next_token(token);
         switch (token->kind) {
         case COLON_TOKEN:
@@ -213,12 +219,15 @@ parse_block(Token *token, TranslatorStatus status)
                     fputc('(', output);
                     continue;
                 case CASE_BLOCK:
+                case DEFAULT_BLOCK:
                     fputs(token->str, output);
                     break;
                 case REPEAT_BLOCK:
                     fprintf(output, ") { _repeat_%x: ", repeat_label);
                     break;
                 case IF_BLOCK:
+                case ELIF_BLOCK:
+                case WHILE_BLOCK:
                     fputc(')', output);
                     /* fallthrough; */
                 default:
@@ -258,18 +267,18 @@ parse_block(Token *token, TranslatorStatus status)
                 break;
             }
             switch (pending) {
-            case SWITCH_BLOCK:
-                if (token->type != 2 && token->type != 3) {
-                    throw(38, "Expected 'case' or 'default'", token);
+            case IF_BLOCK:
+            case ELIF_BLOCK:
+                if (token->type == 1 || token->type == 2) { // elif, else
+                    context = 1;
                 }
-                in_switch_context = token->type;
+                fputc('}', output);
                 break;
-            case CASE_BLOCK:
-                if (in_switch_context && token->type == 2) {
-                    fputs("break;", output);
+            case SWITCH_BLOCK:
+                if (token->type == 8 || token->type == 9) { // case, default
+                    context = 1;
                 } else {
-                    fputc('}', output);
-                    in_switch_context = 0;
+                    throw(37, "Expected 'case' or 'default'", token);
                 }
                 break;
             case STRUCT_BLOCK:
@@ -277,6 +286,13 @@ parse_block(Token *token, TranslatorStatus status)
                 break;
             case ENUM_BLOCK:
                 break;
+            case CASE_BLOCK:
+                if (token->type == 8 || token->type == 9) { // case, default
+                    context = 1;
+                    fputs("break;", output);
+                    break;
+                }
+                /* fallthrough; */
             default:
                 fputc('}', output);
                 break;

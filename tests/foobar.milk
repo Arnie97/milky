@@ -35,6 +35,12 @@ comment */  switch:
         for int i = 0;i < 10;++i:
             printf("%d ", i)
     else:
+        if bar == 2:
+            puts("bar == 2")
+        elif foo != bar:
+            puts("foo != bar")
+        else:
+            pass
         repeat foo > 0:
             foo -= bar
         printf("foo: %d, bar: %d\n", foo, bar)
