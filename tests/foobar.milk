@@ -23,8 +23,20 @@ comment */  switch:
             case 1:
                 tag:: printf("foo = 1\n")
             case 2:
+                if bar == 0:
+                    fallthrough
+                elif sizeof(pants) != 32:
+                    printf("size of pants\n");
+                else:
+                    switch:
+                        bar
+                    case 1:
+                        printf("bar == 1\n")
+                        fallthrough
+                        printf("never\n")
+                    case 2:
+                        printf("bar == 2\n");
                 printf("foo = 2\n")
-                fallthrough
             case 0, 4, 6, 8:
                 printf("foo is even\n")
                 goto tag

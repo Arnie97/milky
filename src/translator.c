@@ -13,7 +13,7 @@ static Token look_ahead_token;
 static char context;
 
 static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, int *);
-static void parse_block(Token *, TranslatorStatus);
+static void parse_block(Token *, TranslatorStatus, int *);
 static int parse_expression(void);
 
 static inline void
@@ -64,18 +64,19 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
                 fputs("_do", output);
                 continue;
             case 10: // fallthrough
-                if (*block != CASE_BLOCK) {
+                if (/* not_in_case */0) {
                     throw(34, "Unexpected keyword in this context", token);
-                } else {
-                    *label = rand();
-                    fprintf(output, "goto _fallthrough_%x;", *label);
                 }
+                if (*label < 0) {
+                    *label = rand();
+                }
+                fprintf(output, "goto _fallthrough_%x;", *label);
                 break;
             case 11: // pass
                 fputc(';', output);
                 continue;
             default:
-                parse_block(token, AFTER_KEYWORD);
+                parse_block(token, AFTER_KEYWORD, label);
             }
             break;
         case END_OF_LINE_TOKEN:
@@ -119,7 +120,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             throw(0, "end!", NULL);
         case COLON_TOKEN:
             store_token(token);
-            parse_block(token, BEFORE_COLON);
+            parse_block(token, BEFORE_COLON, label);
             continue;
         default:
             dputs("Unhandled default!");
@@ -128,7 +129,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
 }
 
 static void
-parse_block(Token *token, TranslatorStatus status)
+parse_block(Token *token, TranslatorStatus status, int *label)
 {
     int new_label = -1;
     BlockStatus block = UNKNOWN_BLOCK;
@@ -229,6 +230,7 @@ parse_block(Token *token, TranslatorStatus status)
                     continue;
                 case CASE_BLOCK:
                 case DEFAULT_BLOCK:
+                    label = &new_label;
                     fputs(token->str, output);
                     break;
                 case IF_BLOCK:
@@ -254,7 +256,7 @@ parse_block(Token *token, TranslatorStatus status)
                 throw(32, "Unexpected indent", token);
             }
             status = BEFORE_UNINDENT;
-            parse_statement(token, &status, &block, &new_label);
+            parse_statement(token, &status, &block, label);
             continue;
         case UNINDENT_TOKEN:
             dprintf(("\033[33m[UN215]\033[0m"));
@@ -296,18 +298,13 @@ parse_block(Token *token, TranslatorStatus status)
                     context = 1;
                     fputs("break;", output);
                     if (new_label > 0) {
-                        fprintf(output, " _fallthrough_%x:", new_label);
+                        fprintf(output, " _fallthrough_%x: ;", new_label);
                     }
                     break;
+                } else if (new_label > 0) {
+                    throw(39, "Expected 'case' or 'default' after 'fallthrough'", token);
                 }
                 /* fallthrough; */
-            case DEFAULT_BLOCK:
-                if (new_label > 0) {
-                    fprintf(output, " _fallthrough_%x: ;}", new_label);
-                } else {
-                    fputc('}', output);
-                }
-                break;
             default:
                 fputc('}', output);
                 break;
