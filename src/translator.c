@@ -12,7 +12,7 @@
 static Token look_ahead_token;
 static char context;
 
-static void parse_statement(Token *, TranslatorStatus *, BlockStatus *);
+static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, int *);
 static void parse_block(Token *, TranslatorStatus);
 static int parse_expression(void);
 
@@ -45,13 +45,13 @@ parse_file(void)
     dputs("start!");
     for (;;) {
         dprintf(("\033[32m[TL46]\033[0m"));
-        parse_statement(&token, &status, &block);
+        parse_statement(&token, &status, &block, NULL);
     }
     look_ahead_queue(DESTROY);
 }
 
 static void
-parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block)
+parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int *label)
 {
     Token temp;
     for (;;) {
@@ -64,6 +64,12 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block)
                 fputs("_do", output);
                 continue;
             case 10: // fallthrough
+                if (*block != CASE_BLOCK) {
+                    throw(34, "Unexpected keyword in this context", token);
+                } else {
+                    *label = rand();
+                    fprintf(output, "goto _fallthrough_%x;", *label);
+                }
                 break;
             case 11: // pass
                 fputc(';', output);
@@ -124,7 +130,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block)
 static void
 parse_block(Token *token, TranslatorStatus status)
 {
-    int repeat_label;
+    int new_label = -1;
     BlockStatus block = UNKNOWN_BLOCK;
     if (status == BEFORE_COLON) {
         block = FUNCTION_BLOCK;
@@ -152,8 +158,8 @@ parse_block(Token *token, TranslatorStatus status)
             continue;
         case 6: // repeat (cond) { statement }
             block = REPEAT_BLOCK;
-            repeat_label = rand();
-            fprintf(output, "goto _repeat_%x; while (", repeat_label);
+            new_label = rand();
+            fprintf(output, "goto _repeat_%x; while (", new_label);
             break;
         case 7: // switch (foo) { statement }
             block = SWITCH_BLOCK;
@@ -216,7 +222,7 @@ parse_block(Token *token, TranslatorStatus status)
                 status = BEFORE_INDENT;
                 switch (block) {
                 case REPEAT_BLOCK:
-                    fprintf(output, ") { _repeat_%x: ", repeat_label);
+                    fprintf(output, ") { _repeat_%x: ", new_label);
                     break;
                 case SWITCH_BLOCK:
                     fputc('(', output);
@@ -248,7 +254,7 @@ parse_block(Token *token, TranslatorStatus status)
                 throw(32, "Unexpected indent", token);
             }
             status = BEFORE_UNINDENT;
-            parse_statement(token, &status, &block);
+            parse_statement(token, &status, &block, &new_label);
             continue;
         case UNINDENT_TOKEN:
             dprintf(("\033[33m[UN215]\033[0m"));
@@ -289,9 +295,19 @@ parse_block(Token *token, TranslatorStatus status)
                 if (token->type == 8 || token->type == 9) { // case, default
                     context = 1;
                     fputs("break;", output);
+                    if (new_label > 0) {
+                        fprintf(output, " _fallthrough_%x:", new_label);
+                    }
                     break;
                 }
                 /* fallthrough; */
+            case DEFAULT_BLOCK:
+                if (new_label > 0) {
+                    fprintf(output, " _fallthrough_%x: ;}", new_label);
+                } else {
+                    fputc('}', output);
+                }
+                break;
             default:
                 fputc('}', output);
                 break;
