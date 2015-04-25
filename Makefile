@@ -1,10 +1,10 @@
-.PHONY: test build clean distclean
+.PHONY: test build debug release clean distclean
 
 ifeq ($(OS),Windows_NT)
 CC       := gcc
 endif
 CC       ?= gcc
-CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -O3 -D _DEBUG
+CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch
 MILKYC   ?= milky
 
 SRCDIR   ?= src
@@ -23,6 +23,10 @@ test: build $(TESTS)
 	@echo "All tests passed! Congratulations!"
 
 build: $(BINDIR)/$(TARGET)
+debug: CCFLAGS += -ggdb -D _DEBUG
+debug: build
+release: CCFLAGS += -O3 -s
+release: build
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p `dirname $@`
