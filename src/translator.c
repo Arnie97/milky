@@ -117,7 +117,8 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             store_token(token);
             return;
         case END_OF_FILE_TOKEN:
-            throw(0, "end!", NULL);
+            throw(9, "end!", NULL);
+            dputs("Never here!");
         case COLON_TOKEN:
             store_token(token);
             parse_block(token, BEFORE_COLON, label);

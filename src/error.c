@@ -6,6 +6,8 @@
 #include "token.h"
 #include "error.h"
 
+jmp_buf exception;
+
 void
 throw(int error_code, char *message, Token *token)
 {
@@ -33,5 +35,16 @@ throw(int error_code, char *message, Token *token)
         fprintf(stderr, "\n\n\033[36;1m%s: \033[31;1m%s\033[0m\n\n",
             file_name, message);
     }
-    exit(error_code);
+
+    if (line != NULL) {
+        free(line);
+        line = NULL;
+    }
+
+    if (token != NULL || error_code == 9) {
+        dputs("Entering longjmp...");
+        longjmp(exception, error_code);
+    } else {
+        exit(error_code);
+    }
 }
