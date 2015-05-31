@@ -47,7 +47,11 @@ open_file(const char *input_name, const char *output_name)
     if (fp_out == NULL) {
         goto handler;
     } else {
+#ifdef _DEBUG
+        output = stdout;
+#else
         output = fp_out;
+#endif
         if (!setjmp(exception)) {
             parse_file();
             dputs("Never here!");
