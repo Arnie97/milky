@@ -15,7 +15,7 @@ TESTSDIR ?= tests
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-TESTS    := $(wildcard $(TESTSDIR)/*.milk)
+TESTS    := $(wildcard $(TESTSDIR)/*.milk $(TESTSDIR)/*.k)
 TARGET   := milky
 
 test: build $(TESTS)
@@ -32,7 +32,7 @@ $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p `dirname $@`
 	@echo "Linking $@..."
 	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
-	@echo "Well done."
+	@echo "Construction complete."
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p `dirname $@`
@@ -48,9 +48,10 @@ distclean: clean
 	rm -r $(BINDIR)
 
 define do-test
-	@echo "Running test $(TESTFILE)..."
+	@echo "Testing $(TESTFILE)..."
 	@$(BINDIR)/$(TARGET) $(TESTFILE)
-	@echo "Test $(TESTFILE) passed."
+	@printf '\n\n'
+
 endef
 
 # $(call make-depend,source-file,object-file,depend-file)
