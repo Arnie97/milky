@@ -117,14 +117,13 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             store_token(token);
             return;
         case END_OF_FILE_TOKEN:
-            throw(9, "end!", NULL);
-            dputs("Never here!");
+            throw(9, "Well done.", NULL);
         case COLON_TOKEN:
             store_token(token);
             parse_block(token, BEFORE_COLON, label);
             continue;
         default:
-            dputs("Unhandled default!");
+            throw(31, "Unhandled statement", token);
         }
     }
 }
@@ -202,7 +201,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             fputs(token->str, output);
             break;
         default:
-            dputs("Unhandled keyword!");
+            throw(31, "Unhandled keyword", token);
             continue;
         }
 
@@ -312,8 +311,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             }
             return;
         default:
-            dputs("Executed to the end of parse_block!");
-            getchar();
+            throw(31, "Unhandled token", token);
         }
     }
 }
