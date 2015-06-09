@@ -7,30 +7,28 @@
 #include "indent.h"
 #include "translator.h"
 
-#define NONEXISTENT (0x7F)
-
-static Token look_ahead_token;
+static Token look_ahead_token[2];
+static int look_ahead_count;
 static char context;
 
 static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, int *);
 static void parse_block(Token *, TranslatorStatus, int *);
-static int parse_expression(void);
+static int parse_expression(char);
 
 static inline void
 next_token(Token *token)
 {
-    if (look_ahead_token.type == NONEXISTENT) {
-        get_indent(token);
+    if (look_ahead_count) {
+        *token = look_ahead_token[--look_ahead_count];
     } else {
-        *token = look_ahead_token;
-        look_ahead_token.type = NONEXISTENT;
+        get_indent(token);
     }
 }
 
 static inline void
 store_token(Token *token)
 {
-    look_ahead_token = *token;
+    look_ahead_token[look_ahead_count++] = *token;
 }
 
 void
@@ -40,7 +38,6 @@ parse_file(void)
     TranslatorStatus status = INITIAL_STATUS;
     BlockStatus block = UNKNOWN_BLOCK;
     srand(RAND_MAX);
-    look_ahead_token.type = NONEXISTENT;
     look_ahead_queue(INIT);
     dputs("start!");
     for (;;) {
@@ -55,7 +52,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
 {
     Token temp;
     for (;;) {
-        parse_expression();
+        parse_expression(0);
         next_token(token);
         switch (token->kind) {
         case KEYWORD_TOKEN:
@@ -102,13 +99,17 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             fputs(token->str, output);
             continue;
         case LINE_COMMENT_TOKEN:
+            next_token(&temp);
+            if (temp.kind == UNINDENT_TOKEN) {
+                store_token(token);
+                store_token(&temp);
+                return;
+            } else if (temp.kind == END_OF_LINE_TOKEN) {
+                temp.kind = ESCAPED_LINE_TOKEN;
+            }
             fputc(';', output);
             fputs(token->str, output);
-            next_token(token);
-            if (token->kind == END_OF_LINE_TOKEN) {
-                token->kind = ESCAPED_LINE_TOKEN;
-            }
-            store_token(token);
+            store_token(&temp);
             continue;
         case INDENT_TOKEN:
             throw(32, "Unexpected indent", token);
@@ -205,7 +206,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             continue;
         }
 
-        if (parse_expression()) {
+        if (parse_expression(1)) {
             status = BEFORE_COLON;
         } else {
             throw(35, "Expected conditions before colon", token);
@@ -241,7 +242,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
                 default:
                     fputc('{', output);
                 }
-                if (parse_expression()) {
+                if (parse_expression(1)) {
                     status = INLINE_STATEMENT;
                     fputc('}', output);
                     return;
@@ -317,23 +318,28 @@ parse_block(Token *token, TranslatorStatus status, int *label)
 }
 
 static inline int
-parse_expression(void)
+parse_expression(char skip_comments)
 {
     int token_count = 0;
     Token token;
     for (;;) {
         next_token(&token);
         switch (token.kind) {
+        case LINE_COMMENT_TOKEN:
+        case BLOCK_COMMENT_TOKEN:
+        case MULTILINE_COMMENT_TOKEN:
+            if (skip_comments) {
+                fputs(token.str, output);
+                continue;
+            }
+            /* fallthrough; */
         case INDENT_TOKEN:
         case UNINDENT_TOKEN:
         case KEYWORD_TOKEN:
         case COLON_TOKEN:
-        case MULTILINE_COMMENT_TOKEN:
         case END_OF_LINE_TOKEN:
         case ESCAPED_LINE_TOKEN:
         case END_OF_FILE_TOKEN:
-        case BLOCK_COMMENT_TOKEN:
-        case LINE_COMMENT_TOKEN:
             store_token(&token);
             return token_count;
         case SCOPE_TOKEN:
