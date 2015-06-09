@@ -15,18 +15,16 @@ jmp_buf exception;
 void
 load_file(FILE *fp)
 {
-    int size = 0, i = 1;
-    line_pos = 1;
-    char c = '~';
-    while ((c = fgetc(fp)) != EOF) {
+    int size = 0, i = 2;
+    for (char c; (c = fgetc(fp)) != EOF; line[i++] = c) {
         if (i > size - 5) {
             if ((line = realloc(line, size += BUFFER_SIZE)) == NULL) {
                 throw(3, "Insufficient memory", NULL);
             }
         }
-        line[i++] = c;
     }
-    line[0] = '~';
+    line_pos = 1;
+    line[0] = line[1] = '\n';
     line[i++] = '\n';
     for (size = i + 3; i < size; line[i++] = '\0');
 }
