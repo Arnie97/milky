@@ -18,10 +18,15 @@ static int parse_expression(char);
 static inline void
 next_token(Token *token)
 {
+    static TokenKind previous;
     if (look_ahead_count) {
         *token = look_ahead_token[--look_ahead_count];
     } else {
         get_indent(token);
+        if (previous == UNINDENT_TOKEN && token->kind == UNINDENT_TOKEN) {
+            token->type ^= 0x80; // add a semicolon
+        }
+        previous = token->kind;
     }
 }
 
@@ -268,6 +273,10 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             continue;
         case UNINDENT_TOKEN:
             dprintf(("\033[33m[UN215]\033[0m"));
+            if (token->type < 0) {
+                token->type ^= 0x80;
+                status = PREPROCESSOR;
+            }
             switch (block) {
             case SWITCH_BLOCK:
                 fputs("){", output);
