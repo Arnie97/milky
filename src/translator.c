@@ -71,7 +71,6 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
                 fprintf(output, "goto _fallthrough_%x;", *label);
                 break;
             case 11: // pass
-                fputc(';', output);
                 continue;
             default:
                 parse_block(token, AFTER_KEYWORD, label);
@@ -106,13 +105,16 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
         case LINE_COMMENT_TOKEN:
             next_token(&temp);
             if (temp.kind == UNINDENT_TOKEN) {
+                token->type = 1;
                 store_token(token);
                 store_token(&temp);
                 return;
             } else if (temp.kind == END_OF_LINE_TOKEN) {
                 temp.kind = ESCAPED_LINE_TOKEN;
             }
-            fputc(';', output);
+            if (token->type < 0) {
+                fputc(';', output);
+            }
             fputs(token->str, output);
             store_token(&temp);
             continue;

@@ -23,6 +23,7 @@ get_token(Token *token)
     token->kind = END_OF_FILE_TOKEN;
     token->row = row;
     token->column = line_pos - line_start_pos;
+    token->type = -1;
 
     while ((current_char = line[line_pos]) != '\0') {
         last_char = line[line_pos - 1];
