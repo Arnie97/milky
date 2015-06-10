@@ -16,7 +16,7 @@ throw(int error_code, char *message, Token *token)
         char *cursor = line;
         fprintf(stderr, "\n\033[36;1m%s:\033[32;1m%d:%d: \033[31;1m%s\033[0m\n",
             file_name, token->row, token->column, message);
-        while (scanned < token->row - 1) {
+        while (scanned < token->row) {
             if (*++cursor == '\n') {
                 scanned++;
             }

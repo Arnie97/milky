@@ -12,7 +12,7 @@
 #define subtract { token->str[--pos_in_token] = '\0'; line_pos--; }
 #define retpos { return pos_in_token; }
 
-static unsigned int line_start_pos, row = 1;
+static unsigned int line_start_pos, row;
 
 int
 get_token(Token *token)

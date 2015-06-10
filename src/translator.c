@@ -35,7 +35,8 @@ void
 parse_file(void)
 {
     Token token;
-    TranslatorStatus status = INITIAL_STATUS;
+    context = -1;
+    TranslatorStatus status = PREPROCESSOR;
     BlockStatus block = UNKNOWN_BLOCK;
     srand(RAND_MAX);
     look_ahead_queue(INIT);
@@ -86,6 +87,10 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
                 }
             } else if (token->kind == END_OF_LINE_TOKEN) {
                 *status = INITIAL_STATUS;
+                if (context == -1) { // skip additional newline at BOF
+                    context = 0;
+                    token->str[0] = '\0';
+                }
             }
             /* fallthrough; */
         case ESCAPED_LINE_TOKEN:

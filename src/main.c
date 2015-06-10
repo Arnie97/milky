@@ -25,7 +25,9 @@ load_file(FILE *fp)
     }
     line_pos = 1;
     line[0] = line[1] = '\n';
-    line[i++] = '\n';
+    if (line[i - 1] != '\n') {
+        line[i++] = '\n';
+    }
     for (size = i + 3; i < size; line[i++] = '\0');
 }
 
