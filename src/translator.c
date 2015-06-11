@@ -358,8 +358,9 @@ parse_expression(char skip_comments)
         case END_OF_FILE_TOKEN:
             store_token(&token);
             return token_count;
-        case SCOPE_TOKEN:
-            fputs(token.str + 1, output); // :: -> :
+        case GOTO_TAG_TOKEN:
+            fputc(':', output); // => -> :
+            fputs(token.str + 2, output);
             break;
         default:
             fputs(token.str, output);

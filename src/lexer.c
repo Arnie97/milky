@@ -146,7 +146,15 @@ get_token(Token *token)
         case '~':
             token->kind = OPERATOR_TOKEN;
             break;
-        case '=': case '!': case '<': case '>':
+        case '=':
+            if (next_char == '>') {
+                token->kind = GOTO_TAG_TOKEN;
+                append;
+                current_char = next_char;
+                break;
+            }
+            /* fallthrough; */
+        case '!': case '<': case '>':
             if (next_char != '=') {
                 if (current_char == '=') {
                     token->kind = ASSIGNMENT_TOKEN;

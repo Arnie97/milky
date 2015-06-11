@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]):
 comment */  switch:
                 foo
             case 1:
-                tag:: printf("foo = 1\n")
+                tag => printf("foo = 1\n")
             case 2:
                 if bar == 0:
                     fallthrough
@@ -60,6 +60,6 @@ comment */  switch:
 
 typedef int element
 struct Jinkela:
-    element Nitrogen
-    element Phosphorus
-    element Potassium
+    element Nitrogen => 1
+    element Phosphorus => 2
+    element Potassium => 4
