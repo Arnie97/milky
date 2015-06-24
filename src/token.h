@@ -35,7 +35,7 @@ typedef enum {
     SHARP_TOKEN = '#'
 } TokenKind;
 
-#define MAX_TOKEN_SIZE (100)
+#define MAX_TOKEN_SIZE (4096)
 
 typedef struct {
     TokenKind kind;

@@ -41,16 +41,19 @@ get_token(Token *token)
                     token->kind = ESCAPED_LINE_TOKEN;
                     retpos;
                 }
-                if (token->kind == STRING_TOKEN) {
+                switch (token->kind) {
+                case STRING_TOKEN:
                     token->kind = MULTILINE_STRING_TOKEN;
                     continue;
-                }
-                if (token->kind == BLOCK_COMMENT_TOKEN) {
+                case BLOCK_COMMENT_TOKEN:
                     token->kind = MULTILINE_COMMENT_TOKEN;
+                    /* fallthrough; */
+                case MULTILINE_COMMENT_TOKEN:
                     continue;
+                default:
+                    token->kind = END_OF_LINE_TOKEN;
+                    retpos;
                 }
-                token->kind = END_OF_LINE_TOKEN;
-                retpos;
             }
             append;
             continue;

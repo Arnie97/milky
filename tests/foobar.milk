@@ -8,7 +8,13 @@ enum SecretsBureau:
     StrawStraw,
     MiaoMiao
 
-int main(int argc, char const *argv[]):
+/*
+    Heretic people all over the world have claimed that this inconsistency
+    is ...  well ...  inconsistent, but all right-thinking people know that
+    (a) K&R are _right_ and (b) K&R are right.  Besides, functions are
+    special anyway (you can't nest them in C).
+*/
+int main(int argc, char *argv[]):
     short pants = 1989-06-04               // blah blah blah
     long trousers = 0xC0ffee / 0xCafe
     int foo, bar; char *piyo = "abc \" def"
