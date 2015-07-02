@@ -1,4 +1,4 @@
-.PHONY: test build debug release clean distclean
+.PHONY: test build debug release clean distclean testclean
 
 ifeq ($(OS),Windows_NT)
 CC       := gcc
@@ -10,17 +10,25 @@ MILKYC   ?= milky
 SRCDIR   ?= src
 OBJDIR   ?= obj
 BINDIR   ?= bin
-TESTSDIR ?= tests
+INSTDIR  ?= $(PREFIX)/bin
+TESTDIR  ?= tests
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-TESTS    := $(wildcard $(TESTSDIR)/*.milk $(TESTSDIR)/*.k)
 TARGET   := milky
 
-test: build $(TESTS)
-	$(foreach TESTFILE,$(TESTS),$(call do-test))
+TEST_ALL     := $(wildcard $(TESTDIR)/*.milk $(TESTDIR)/*.k)
+TEST_GCC     := $(wildcard $(TESTDIR)/*.c.k)
+TEST_SOURCES := $(TEST_ALL:$(TESTDIR)/%.k=$(TESTDIR)/%)
+TEST_OBJECTS := $(TEST_GCC:$(TESTDIR)/%.c.k=$(OBJDIR)/%.o)
+
+test: $(TEST_SOURCES) $(TEST_OBJECTS)
 	@echo "All tests passed! Congratulations!"
+
+install: release
+	@mkdir -p $(INSTDIR)
+	@install -m 0775 $(BINDIR)/$(TARGET) $(INSTDIR)
 
 build: $(BINDIR)/$(TARGET)
 debug: CCFLAGS += -ggdb -D _DEBUG
@@ -41,18 +49,26 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@echo "Compiling $<..."
 	@$(CC) $(CCFLAGS) -c $< -o $@
 
+$(TEST_OBJECTS): $(OBJDIR)/%.o: $(TESTDIR)/%.c
+	@mkdir -p `dirname $@`
+	@echo "Generating dependencies for $<..."
+	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
+	@echo "Compiling $<..."
+	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(TEST_SOURCES): $(TESTDIR)/%: $(TESTDIR)/%.k build
+	@echo "Testing $<..."
+	@$(BINDIR)/$(TARGET) $<
+	@printf '\n'
+
 clean:
 	rm -r $(OBJDIR)
 
 distclean: clean
 	rm -r $(BINDIR)
 
-define do-test
-	@echo "Testing $(TESTFILE)..."
-	@$(BINDIR)/$(TARGET) $(TESTFILE)
-	@printf '\n\n'
-
-endef
+testclean:
+	rm `find $(TESTDIR) -type f -not -name "*.milk" -not -name "*.k"`
 
 # $(call make-depend,source-file,object-file,depend-file)
 define make-depend
