@@ -36,22 +36,33 @@ get_token(Token *token)
             if (current_char == '\n') {
                 row++;
                 line_start_pos = line_pos;
-                append;
-                if (last_char == '\\') {
-                    token->kind = ESCAPED_LINE_TOKEN;
-                    retpos;
-                }
                 switch (token->kind) {
                 case STRING_TOKEN:
                     token->kind = MULTILINE_STRING_TOKEN;
+                    /* fallthrough; */
+                case MULTILINE_STRING_TOKEN:
+                    if (escaped) {
+                        escaped = 0;
+                    } else {
+                        token->str[pos_in_token++] = '\\';
+                        token->str[pos_in_token++] = 'n';
+                        token->str[pos_in_token++] = '\\';
+                    }
+                    append;
                     continue;
                 case BLOCK_COMMENT_TOKEN:
                     token->kind = MULTILINE_COMMENT_TOKEN;
                     /* fallthrough; */
                 case MULTILINE_COMMENT_TOKEN:
+                    append;
                     continue;
                 default:
-                    token->kind = END_OF_LINE_TOKEN;
+                    if (last_char == '\\') {
+                        token->kind = ESCAPED_LINE_TOKEN;
+                    } else {
+                        token->kind = END_OF_LINE_TOKEN;
+                    }
+                    append;
                     retpos;
                 }
             }
