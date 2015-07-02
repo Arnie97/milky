@@ -18,7 +18,7 @@ int
 get_token(Token *token)
 {
     int pos_in_token = 0;
-    char last_char, current_char, next_char;
+    char last_char, current_char, next_char, escaped;
 
     token->kind = END_OF_FILE_TOKEN;
     token->row = row;
@@ -62,13 +62,17 @@ get_token(Token *token)
         append;
         switch (token->kind) {
         case CHAR_TOKEN:
-            if (last_char != '\\' && current_char == '\'') {
-                retpos;
-            }
-            continue;
         case STRING_TOKEN:
         case MULTILINE_STRING_TOKEN:
-            if (last_char != '\\' && current_char == '"') {
+            if (escaped) {
+                escaped = 0;
+            } else if (current_char == '\\') {
+                escaped = 1;
+            } else if (token->kind == CHAR_TOKEN) {
+                if (current_char == '\'') {
+                    retpos;
+                }
+            } else if (current_char == '"') {
                 retpos;
             }
             continue;
@@ -191,10 +195,12 @@ get_token(Token *token)
             token->kind = current_char;
             break;
         case '\'':
+            escaped = 0;
             token->kind = CHAR_TOKEN;
             append;
             continue;
         case '\"':
+            escaped = 0;
             token->kind = STRING_TOKEN;
             append;
             continue;
