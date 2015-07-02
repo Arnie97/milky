@@ -17,17 +17,16 @@ enum SecretsBureau:
 int main(int argc, char *argv[]):
     short pants = 1989-06-04               // blah blah blah
     long trousers = 0xC0ffee / 0xCafe
-    int foo, bar; char *piyo = "abc \" def"
-    char baz = 'one + two \' @'
+    int foo, bar; char piyo[] = "illyasviel \" ruby", baz = '\''
+    pants += trousers * baz
 
-    pants += trousers *= 0x1997
     scanf("%d %d", &foo, &bar)
     if bar == 9:
         while foo <= bar:   /* yet another
 comment */  switch:
                 foo
             case 1:
-                tag => printf("foo = 1\n")
+                tag => puts(piyo)
             case 2:
                 if bar == 0:
                     fallthrough

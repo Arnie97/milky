@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "input.h"
 #include "token.h"
@@ -145,6 +146,7 @@ static void
 parse_block(Token *token, TranslatorStatus status, int *label)
 {
     int new_label = -1;
+    char type_name[MAX_TOKEN_SIZE];
     BlockStatus block = UNKNOWN_BLOCK;
     if (status == BEFORE_COLON) {
         block = FUNCTION_BLOCK;
@@ -205,17 +207,20 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             fputs(token->str, output);
             status = BEFORE_COLON;
             continue;
-        case 12: // typedef enum { list } name;
-            block = ENUM_BLOCK;
+        case 12: case 13: case 14: // typedef struct { list } name;
+            block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK;
+            fputs("typedef ", output);
             fputs(token->str, output);
-            break;
-        case 13: case 14: // struct name { list };
-            block = STRUCT_BLOCK;
-            fputs(token->str, output);
-            break;
+            next_token(token);
+            if (token->kind == IDENTIFIER_TOKEN) {
+                strcpy(type_name, token->str);
+            } else {
+                throw(35, "Expected type name before colon", token);
+            }
+            status = BEFORE_COLON;
+            continue;
         default:
             throw(31, "Unhandled keyword", token);
-            continue;
         }
 
         if (parse_expression(1)) {
@@ -229,10 +234,9 @@ parse_block(Token *token, TranslatorStatus status, int *label)
         next_token(token);
         switch (token->kind) {
         case COLON_TOKEN:
-            switch (status) {
-            case AFTER_KEYWORD:
-                throw(35, "Expected conditions before colon", token);
-            case BEFORE_COLON:
+            if (status != BEFORE_COLON) {
+                throw(36, "Unexpected colons", token);
+            } else {
                 status = BEFORE_INDENT;
                 switch (block) {
                 case REPEAT_BLOCK:
@@ -260,8 +264,6 @@ parse_block(Token *token, TranslatorStatus status, int *label)
                     return;
                 }
                 break;
-            default:
-                throw(36, "Unexpected colons", token);
             }
             continue;
         case INDENT_TOKEN:
@@ -282,7 +284,6 @@ parse_block(Token *token, TranslatorStatus status, int *label)
                 fputs("){", output);
                 break;
             case ENUM_BLOCK:
-                fprintf(output, "} %s;", "token_t");
                 break;
             default:
                 if (status != PREPROCESSOR) {
@@ -299,9 +300,8 @@ parse_block(Token *token, TranslatorStatus status, int *label)
                 fputc('}', output);
                 break;
             case ENUM_BLOCK:
-                break;
             case STRUCT_BLOCK:
-                fputs("};", output);
+                fprintf(output, "} %s;", type_name);
                 break;
             case SWITCH_BLOCK:
                 if (token->type == 8 || token->type == 9) { // case, default
