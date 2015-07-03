@@ -17,6 +17,6 @@ static char *keywords[15] = {
     "enum",
     "struct",
     "union"
-};
+}
 
 #endif /* KEYWORD_H_INCLUDED */

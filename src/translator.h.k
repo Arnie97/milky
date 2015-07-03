@@ -1,20 +1,16 @@
 #ifndef TRANSLATOR_H_INCLUDED
 #define TRANSLATOR_H_INCLUDED
 
-#define MAX_LOOK_AHEAD_TOKENS (20)
-#define MAX_INDENT_LEVELS (20)
-
-typedef enum {
+enum TranslatorStatus:
     INITIAL_STATUS,
     AFTER_KEYWORD,
     BEFORE_COLON,
     BEFORE_INDENT,
     INLINE_STATEMENT,
     BEFORE_UNINDENT,
-    PREPROCESSOR,
-} TranslatorStatus;
+    PREPROCESSOR
 
-typedef enum {
+enum BlockStatus:
     UNKNOWN_BLOCK,
     FUNCTION_BLOCK,
     IF_BLOCK,
@@ -27,8 +23,7 @@ typedef enum {
     DEFAULT_BLOCK,
     ENUM_BLOCK,
     STRUCT_BLOCK
-} BlockStatus;
 
-void parse_file(void);
+void parse_file(void)
 
 #endif /* TRANSLATOR_H_INCLUDED */
