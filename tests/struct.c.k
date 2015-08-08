@@ -1,4 +1,4 @@
-struct primary:
+struct /* a */ primary /* test */:
     int *pointer
     int bit_width => 9
 

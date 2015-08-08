@@ -151,7 +151,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
     BlockStatus block = UNKNOWN_BLOCK;
     if (status == BEFORE_COLON) {
         block = FUNCTION_BLOCK;
-    } else do {
+    } else {
         switch (token->type) {
         case 0: case 3: case 5: // if (cond) { statement }
             block = token->type? WHILE_BLOCK: IF_BLOCK;
@@ -172,7 +172,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             }
             fputs(token->str, output);
             status = BEFORE_COLON;
-            continue;
+            break;
         case 6: // repeat (cond) { statement }
             block = REPEAT_BLOCK;
             new_label = rand();
@@ -182,7 +182,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             block = SWITCH_BLOCK;
             fputs(token->str, output);
             status = BEFORE_COLON;
-            continue;
+            break;
         case 8: // case 9, 7: statement
             block = CASE_BLOCK;
             if (!context) {
@@ -198,7 +198,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             }
             store_token(token);
             status = BEFORE_COLON;
-            continue;
+            break;
         case 9: // default: statement
             block = DEFAULT_BLOCK;
             if (!context) {
@@ -207,28 +207,31 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             context = 0;
             fputs(token->str, output);
             status = BEFORE_COLON;
-            continue;
+            break;
         case 12: case 13: case 14: // typedef struct { list } name;
             block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK;
             fputs("typedef ", output);
             fputs(token->str, output);
-            if (next_token(token)->kind == IDENTIFIER_TOKEN) {
+            while (next_token(token)->kind == BLOCK_COMMENT_TOKEN) {
+                fputs(token->str, output);
+            }
+            if (token->kind == IDENTIFIER_TOKEN) {
                 strcpy(type_name, token->str);
             } else {
                 throw(35, "Expected type name before colon", token);
             }
             status = BEFORE_COLON;
-            continue;
+            break;
         default:
             throw(31, "Unhandled keyword", token);
         }
 
         if (parse_expression(1)) {
             status = BEFORE_COLON;
-        } else {
+        } else if (status != BEFORE_COLON) {
             throw(35, "Expected conditions before colon", token);
         }
-    } while (0);
+    }
 
     for (context = 0;;) {
         switch (next_token(token)->kind) {
