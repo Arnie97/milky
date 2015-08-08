@@ -147,7 +147,6 @@ static void
 parse_block(Token *token, TranslatorStatus status, int *label)
 {
     int new_label = -1;
-    char type_name[MAX_TOKEN_SIZE];
     BlockStatus block = UNKNOWN_BLOCK;
     if (status == BEFORE_COLON) {
         block = FUNCTION_BLOCK;
@@ -210,13 +209,12 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             break;
         case 12: case 13: case 14: // typedef struct { list } name;
             block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK;
-            fputs("typedef ", output);
             fputs(token->str, output);
             while (next_token(token)->kind == BLOCK_COMMENT_TOKEN) {
                 fputs(token->str, output);
             }
             if (token->kind == IDENTIFIER_TOKEN) {
-                strcpy(type_name, token->str);
+                fputs(token->str, output);
             } else {
                 throw(35, "Expected type name before colon", token);
             }
@@ -303,7 +301,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
                 break;
             case ENUM_BLOCK:
             case STRUCT_BLOCK:
-                fprintf(output, "} %s;", type_name);
+                fputs("};", output);
                 break;
             case SWITCH_BLOCK:
                 if (token->type == 8 || token->type == 9) { // case, default
@@ -330,6 +328,10 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             }
             return;
         default:
+            if (block == ENUM_BLOCK || block == STRUCT_BLOCK) {
+                store_token(token);
+                return;
+            }
             throw(31, "Unhandled token", token);
         }
     }
