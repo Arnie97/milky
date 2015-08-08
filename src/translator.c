@@ -16,7 +16,7 @@ static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, int *);
 static void parse_block(Token *, TranslatorStatus, int *);
 static int parse_expression(char);
 
-static inline void
+static inline Token *
 next_token(Token *token)
 {
     static TokenKind previous;
@@ -29,6 +29,7 @@ next_token(Token *token)
         }
         previous = token->kind;
     }
+    return token;
 }
 
 static inline void
@@ -60,8 +61,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
     Token temp;
     for (;;) {
         parse_expression(0);
-        next_token(token);
-        switch (token->kind) {
+        switch (next_token(token)->kind) {
         case KEYWORD_TOKEN:
             switch (token->type) {
             case 4: // do
@@ -102,8 +102,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             }
             /* fallthrough; */
         case ESCAPED_LINE_TOKEN:
-            next_token(&temp);
-            if (temp.kind == SHARP_TOKEN) {
+            if (next_token(&temp)->kind == SHARP_TOKEN) {
                 *status = PREPROCESSOR;
             }
             store_token(&temp);
@@ -112,8 +111,7 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             fputs(token->str, output);
             continue;
         case LINE_COMMENT_TOKEN:
-            next_token(&temp);
-            if (temp.kind == UNINDENT_TOKEN) {
+            if (next_token(&temp)->kind == UNINDENT_TOKEN) {
                 token->type = 1;
                 store_token(token);
                 store_token(&temp);
@@ -214,8 +212,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
             block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK;
             fputs("typedef ", output);
             fputs(token->str, output);
-            next_token(token);
-            if (token->kind == IDENTIFIER_TOKEN) {
+            if (next_token(token)->kind == IDENTIFIER_TOKEN) {
                 strcpy(type_name, token->str);
             } else {
                 throw(35, "Expected type name before colon", token);
@@ -234,8 +231,7 @@ parse_block(Token *token, TranslatorStatus status, int *label)
     } while (0);
 
     for (context = 0;;) {
-        next_token(token);
-        switch (token->kind) {
+        switch (next_token(token)->kind) {
         case COLON_TOKEN:
             if (status != BEFORE_COLON) {
                 throw(36, "Unexpected colons", token);
@@ -342,8 +338,7 @@ parse_expression(char skip_comments)
     int token_count = 0;
     Token token;
     for (;;) {
-        next_token(&token);
-        switch (token.kind) {
+        switch (next_token(&token)->kind) {
         case LINE_COMMENT_TOKEN:
         case BLOCK_COMMENT_TOKEN:
         case MULTILINE_COMMENT_TOKEN:
