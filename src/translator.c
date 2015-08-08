@@ -79,6 +79,9 @@ parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int 
             case 11: // pass
                 continue;
             default:
+                if (*block == ENUM_BLOCK || *block == STRUCT_BLOCK && token->type < 12) {
+                    throw(34, "Unexpected keyword in this context", token);
+                }
                 parse_block(token, AFTER_KEYWORD, label);
             }
             break;
