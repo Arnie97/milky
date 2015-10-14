@@ -9,6 +9,9 @@
 
 Queue *look_ahead_tokens
 
+int *strchr_i(register const int *s, int c)
+size_t strlen_i(const int *s)
+
 
 static void get_escaped(Token *token):
     static int ternary_expressions, unclosed_brackets
@@ -45,8 +48,9 @@ static inline void store_token(Token *token):
 
 
 void get_indent(Token *token):
-    static char indent_settled, settled_by, current_indent, indent_just_changed
-    static char indents[MAX_INDENTATION_LEVEL] = { 0 }
+    static char settled_by, indent_just_changed
+    static int indent_settled, current_indent
+    static int indents[MAX_INDENTATION_LEVEL] = { 0 }
     char first_new_line = 1
 
     while !indent_settled:
@@ -82,9 +86,9 @@ void get_indent(Token *token):
             store_token(token)
 
     // indent just settled, token not inserted
-    char indent_levels = strlen(indents)
-    char last_indent = indent_levels? indents[indent_levels - 1]: 0
-    char indent_change = current_indent - last_indent
+    int indent_levels = strlen_i(indents)
+    int last_indent = indent_levels? indents[indent_levels - 1]: 0
+    int indent_change = current_indent - last_indent
     if indent_change > 0:
         token->kind = INDENT_TOKEN
         token->str[0] = '\0'
@@ -100,7 +104,7 @@ void get_indent(Token *token):
     if indent_change < 0:
         token->kind = UNINDENT_TOKEN
         token->str[0] = '\0'
-        if strchr(indents, current_indent) == NULL:
+        if strchr_i(indents, current_indent) == NULL:
             throw(22, "Unindent does not match any outer indentation level", token)
         dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent))
         indents[indent_levels - 1] = 0
@@ -142,3 +146,17 @@ void look_ahead_queue(char action):
         look_ahead_tokens = init()
     else:
         destroy(look_ahead_tokens)
+
+
+int *strchr_i(register const int *s, int c):
+    repeat *s++:
+        if *s == c:
+            return (int *)s
+    return NULL
+
+
+size_t strlen_i(const int *s):
+    size_t i = -1
+    while s[++i]:
+        pass
+    return i
