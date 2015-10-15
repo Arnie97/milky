@@ -3,6 +3,8 @@
 #include "token.h"
 #include "queue.h"
 
+#define isempty(queue) (queue->front == NULL && queue->rear == NULL && queue->size == 0)
+
 
 Queue *init(void):
     Queue *queue = malloc(sizeof(Queue))

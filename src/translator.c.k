@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "input.h"
 #include "token.h"
@@ -12,8 +13,8 @@ static Token look_ahead_token[2]
 static int look_ahead_count
 static char context
 
-static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, int *)
-static void parse_block(Token *, TranslatorStatus, int *)
+static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, void *)
+static void parse_block(Token *, TranslatorStatus, void *)
 static int parse_expression(char)
 
 
@@ -46,13 +47,23 @@ void parse_file(void):
     look_ahead_queue(DESTROY)
 
 
-static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, int *label):
+static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, void *label):
     Token temp
     for ;;:
-        parse_expression(0)
+        parse_expression(2)
         next_token(token)
         switch:
             token->kind
+        case IDENTIFIER_TOKEN:
+            if *block == STRUCT_BLOCK:
+                #define isempty(x) (isspace(*(x)) || *(x) == '\0')
+                char *p = label, *q = token->str
+                while !isempty(p) && !isempty(q):
+                    if *p++ != *q++:
+                        goto hell
+                if isempty(p) && isempty(q):
+                    fputs("struct ", output)
+            hell => fputs(token->str, output)
         case KEYWORD_TOKEN:
             switch:
                 token->type
@@ -61,9 +72,9 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             case 10: // fallthrough
                 if /* not_in_case */0:
                     throw(34, "Unexpected keyword in this context", token)
-                if *label < 0:
-                    *label = rand()
-                fprintf(output, "goto _fallthrough_%x;", *label)
+                if *(int *)label < 0:
+                    *(int *)label = rand()
+                fprintf(output, "goto _fallthrough_%x;", *(int *)label)
             case 11: // pass
                 pass
             default:
@@ -117,7 +128,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             throw(31, "Unhandled statement", token)
 
 
-static void parse_block(Token *token, TranslatorStatus status, int *label):
+static void parse_block(Token *token, TranslatorStatus status, void *label):
     int new_label = -1
     char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
@@ -172,6 +183,7 @@ static void parse_block(Token *token, TranslatorStatus status, int *label):
                 next_token(token)
                 if token->kind == IDENTIFIER_TOKEN:
                     strcpy(type_name, token->str)
+                    fputs(token->str, output)
                 else:
                     throw(35, "Expected type name before colon", token)
 
@@ -204,6 +216,9 @@ static void parse_block(Token *token, TranslatorStatus status, int *label):
                 case CASE_BLOCK, DEFAULT_BLOCK:
                     label = &new_label
                     fputs(token->str, output)
+                case STRUCT_BLOCK:
+                    label = &type_name
+                    fputc('{', output)
                 case IF_BLOCK, ELIF_BLOCK, WHILE_BLOCK:
                     fputc(')', output)
                     fallthrough
@@ -263,7 +278,7 @@ static void parse_block(Token *token, TranslatorStatus status, int *label):
             throw(31, "Unhandled token", token)
 
 
-static inline int parse_expression(char skip_comments):
+static inline int parse_expression(char options):
     int token_count = 0
     Token token
     for ;;:
@@ -271,10 +286,14 @@ static inline int parse_expression(char skip_comments):
         switch:
             token.kind
         case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN, MULTILINE_COMMENT_TOKEN:
-            if skip_comments:
+            if (options & 0x1): // 0x1 keeps comments
                 fputs(token.str, output)
                 continue
-            fallthrough
+            else:
+                fallthrough
+        case IDENTIFIER_TOKEN:
+            if (options & 0x2) || token.kind != IDENTIFIER_TOKEN:
+                fallthrough // 0x2 returns identifiers
         case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN:
             fallthrough
         case END_OF_LINE_TOKEN, ESCAPED_LINE_TOKEN, END_OF_FILE_TOKEN:
@@ -283,6 +302,6 @@ static inline int parse_expression(char skip_comments):
         case GOTO_TAG_TOKEN:
             fputc(':', output); // => -> :
             fputs(token.str + 2, output)
-        default:
-            fputs(token.str, output)
+            continue
+        fputs(token.str, output)
         token_count++

@@ -68,3 +68,4 @@ struct Jinkela:
     element Nitrogen => 1
     element Phosphorus => 2
     element Potassium => 4
+    Jinkela *Shengdiyage
