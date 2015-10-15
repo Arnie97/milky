@@ -43,7 +43,8 @@ void parse_file(void):
     dputs("start!")
     for ;;:
         dprintf(("\033[32m[TL46]\033[0m"))
-        parse_statement(&token, &status, &block, NULL)
+        int new_label = 0
+        parse_statement(&token, &status, &block, &new_label)
     look_ahead_queue(DESTROY)
 
 
@@ -72,7 +73,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             case 10: // fallthrough
                 if /* not_in_case */0:
                     throw(34, "Unexpected keyword in this context", token)
-                if *(int *)label < 0:
+                while *(int *)label == 0:
                     *(int *)label = rand()
                 fprintf(output, "goto _fallthrough_%x;", *(int *)label)
             case 11: // pass
@@ -129,7 +130,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
 
 
 static void parse_block(Token *token, TranslatorStatus status, void *label):
-    int new_label = -1
+    int new_label = 0
     char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
     if status == BEFORE_COLON:
@@ -265,9 +266,9 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                 if token->type == 8 || token->type == 9: // case, default
                     context = 1
                     fputs("break;", output)
-                    if new_label > 0:
+                    if new_label:
                         fprintf(output, " _fallthrough_%x: ;", new_label)
-                elif new_label > 0:
+                elif new_label:
                     throw(39, "Expected 'case' or 'default' after 'fallthrough'", token)
                 else:
                     fallthrough
