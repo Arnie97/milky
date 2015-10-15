@@ -72,7 +72,10 @@ void get_indent(Token *token):
             else:
                 token->kind = ESCAPED_LINE_TOKEN
             fallthrough
-        case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN:
+        case LINE_COMMENT_TOKEN:
+            token->type = 1
+            fallthrough
+        case BLOCK_COMMENT_TOKEN:
             current_indent += strlen(token->str)
             store_token(token)
             continue
