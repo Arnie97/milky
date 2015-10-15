@@ -7,6 +7,8 @@
 #include "lexer.h"
 #include "indent.h"
 
+#define MAX_INDENTATION_LEVEL (20)
+
 Queue *look_ahead_tokens
 
 int *strchr_i(register const int *s, int c)
