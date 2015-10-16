@@ -217,6 +217,7 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                 case CASE_BLOCK, DEFAULT_BLOCK:
                     label = &new_label
                     fputs(token->str, output)
+                    fputc(';', output) // declaration magic
                 case STRUCT_BLOCK:
                     label = &type_name
                     fputc('{', output)
