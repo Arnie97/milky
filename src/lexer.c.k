@@ -94,7 +94,12 @@ int get_token(Token *token):
                 continue
 
         if isalnum(current_char) || current_char == '_':
+            if !isdigit(current_char):
+                token->type = 0
             if isalnum(next_char) || next_char == '_':
+                continue
+            elif token->type && next_char == '.':
+                append
                 continue
             token->str[pos_in_token] = '\0'
             for int t = sizeof(keywords) / sizeof(char *) - 1; t >= 0; t--:
@@ -110,7 +115,7 @@ int get_token(Token *token):
             current_char
         case '-':
             if next_char == '>':
-                token->kind = OPERATOR_TOKEN
+                token->kind = MEMBER_SELECT_TOKEN
                 append
                 current_char = next_char
             else:
@@ -169,8 +174,13 @@ int get_token(Token *token):
                 // current_char = next_char
             else:
                 fallthrough
-        case '(', ')', '[', ']', '{', '}', '.', ',', '#', '?', ';':
+        case '(', ')', '[', ']', '{', '}', ',', '#', '?', ';':
             token->kind = current_char
+        case '.':
+            if isdigit(next_char):
+                token->kind = IDENTIFIER_TOKEN
+            else:
+                token->kind = MEMBER_SELECT_TOKEN
         case '\'':
             escaped = 0
             token->kind = CHAR_TOKEN
