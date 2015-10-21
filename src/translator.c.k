@@ -55,6 +55,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
         next_token(token)
         switch:
             token->kind
+
         case IDENTIFIER_TOKEN:
             if *block == STRUCT_BLOCK:
                 #define isempty(x) (isspace(*(x)) || *(x) == '\0')
@@ -65,6 +66,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
                 if isempty(p) && isempty(q):
                     fputs("struct ", output)
             hell => fputs(token->str, output)
+
         case KEYWORD_TOKEN:
             switch:
                 token->type
@@ -80,6 +82,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
                 pass
             default:
                 parse_block(token, AFTER_KEYWORD, label)
+
         case END_OF_LINE_TOKEN, MULTILINE_COMMENT_TOKEN:
             if *status == BEFORE_INDENT:
                 throw(33, "Expected indent", token)
@@ -92,14 +95,17 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
                     context = 0
                     token->str[0] = '\0'
             fallthrough
+
         case ESCAPED_LINE_TOKEN:
             next_token(&temp)
             if temp.kind == SHARP_TOKEN:
                 *status = PREPROCESSOR
             store_token(&temp)
             fallthrough
+
         case BLOCK_COMMENT_TOKEN:
             fputs(token->str, output)
+
         case LINE_COMMENT_TOKEN:
             next_token(&temp)
             if temp.kind == UNINDENT_TOKEN:
@@ -114,17 +120,22 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
                 fputc(';', output)
             fputs(token->str, output)
             store_token(&temp)
+
         case INDENT_TOKEN:
             throw(32, "Unexpected indent", token)
+
         case UNINDENT_TOKEN:
             dprintf(("\033[31m[UN68]\033[0m"))
             store_token(token)
             return
+
         case END_OF_FILE_TOKEN:
             throw(9, "Well done.", NULL)
+
         case COLON_TOKEN:
             store_token(token)
             parse_block(token, BEFORE_COLON, label)
+
         default:
             throw(31, "Unhandled statement", token)
 
@@ -135,73 +146,86 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
     BlockStatus block = UNKNOWN_BLOCK
     if status == BEFORE_COLON:
         block = FUNCTION_BLOCK
+        goto conditions_processed
+
+    switch:
+        token->type
+
+    case 0, 3, 5: // if (cond) { statement }
+        block = token->type? WHILE_BLOCK: IF_BLOCK
+        fputs(token->str, output)
+        fputc('(', output)
+
+    case 1: // elif -> else if
+        block = ELIF_BLOCK
+        if !context:
+            throw(34, "Unexpected keyword in this context", token)
+        fputs("else if (", output)
+
+    case 2: // else { statement }
+        block = ELSE_BLOCK
+        if !context:
+            throw(34, "Unexpected keyword in this context", token)
+        fputs(token->str, output)
+        goto conditions_processed
+
+    case 6: // repeat (cond) { statement }
+        block = REPEAT_BLOCK
+        new_label = rand()
+        fprintf(output, "goto _repeat_%x; while (", new_label)
+
+    case 7: // switch (expr) { statement }
+        block = SWITCH_BLOCK
+        fputs(token->str, output)
+        goto conditions_processed
+
+    case 8: // case 9, 7: statement
+        block = CASE_BLOCK
+        if !context:
+            throw(34, "Unexpected keyword in this context", token)
+        while token->kind != COLON_TOKEN:
+            if token->kind == COMMA_TOKEN:
+                fputs(": case ", output)
+            else:
+                fputs(token->str, output)
+            next_token(token)
+        store_token(token)
+        goto conditions_processed
+
+    case 9: // default: statement
+        block = DEFAULT_BLOCK
+        if !context:
+            throw(34, "Unexpected keyword in this context", token)
+        context = 0
+        fputs(token->str, output)
+        goto conditions_processed
+
+    case 12, 13, 14: // typedef struct { list } name
+        block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK
+        fputs("typedef ", output)
+        fputs(token->str, output)
+        next_token(token)
+        if token->kind == IDENTIFIER_TOKEN:
+            strcpy(type_name, token->str)
+            fputs(token->str, output)
+        else:
+            throw(35, "Expected type name before colon", token)
+        goto conditions_processed
+
+    default:
+        throw(31, "Unhandled keyword", token)
+
+    // if, elif, while, for, repeat
+    if !parse_expression(1):
+        throw(35, "Expected conditions before colon", token)
     else:
-        repeat 0:
-            switch:
-                token->type
-            case 0, 3, 5: // if (cond) { statement }
-                block = token->type? WHILE_BLOCK: IF_BLOCK
-                fputs(token->str, output)
-                fputc('(', output)
-            case 1: // elif -> else if
-                block = ELIF_BLOCK
-                if !context:
-                    throw(34, "Unexpected keyword in this context", token)
-                fputs("else if (", output)
-            case 2: // else { statement }
-                block = ELSE_BLOCK
-                if !context:
-                    throw(34, "Unexpected keyword in this context", token)
-                fputs(token->str, output)
-            case 6: // repeat (cond) { statement }
-                block = REPEAT_BLOCK
-                new_label = rand()
-                fprintf(output, "goto _repeat_%x; while (", new_label)
-            case 7: // switch (expr) { statement }
-                block = SWITCH_BLOCK
-                fputs(token->str, output)
-            case 8: // case 9, 7: statement
-                block = CASE_BLOCK
-                if !context:
-                    throw(34, "Unexpected keyword in this context", token)
-                while token->kind != COLON_TOKEN:
-                    if token->kind == COMMA_TOKEN:
-                        fputs(": case ", output)
-                    else:
-                        fputs(token->str, output)
-                    next_token(token)
-                store_token(token)
-            case 9: // default: statement
-                block = DEFAULT_BLOCK
-                if !context:
-                    throw(34, "Unexpected keyword in this context", token)
-                context = 0
-                fputs(token->str, output)
-            case 12, 13, 14: // typedef struct { list } name
-                block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK
-                fputs("typedef ", output)
-                fputs(token->str, output)
-                next_token(token)
-                if token->kind == IDENTIFIER_TOKEN:
-                    strcpy(type_name, token->str)
-                    fputs(token->str, output)
-                else:
-                    throw(35, "Expected type name before colon", token)
-
-            default:
-                throw(31, "Unhandled keyword", token)
-
-            switch:
-                token->type
-            case 0, 1, 3, 5, 6: // if, elif, while, for, repeat
-                if !parse_expression(1):
-                    throw(35, "Expected conditions before colon", token)
-            status = BEFORE_COLON
+        conditions_processed => status = BEFORE_COLON
 
     for context = 0;;:
         next_token(token)
         switch:
             token->kind
+
         case COLON_TOKEN:
             if status != BEFORE_COLON:
                 throw(36, "Unexpected colons", token)
@@ -230,11 +254,13 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                     status = INLINE_STATEMENT
                     fputc('}', output)
                     return
+
         case INDENT_TOKEN:
             if status != BEFORE_INDENT:
                 throw(32, "Unexpected indent", token)
             status = BEFORE_UNINDENT
             parse_statement(token, &status, &block, label)
+
         case UNINDENT_TOKEN:
             dprintf(("\033[33m[UN215]\033[0m"))
             if token->type < 0:
@@ -276,6 +302,7 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
             default:
                 fputc('}', output)
             return
+
         default:
             throw(31, "Unhandled token", token)
 
@@ -287,23 +314,29 @@ static inline int parse_expression(char options):
         next_token(&token)
         switch:
             token.kind
+
         case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN, MULTILINE_COMMENT_TOKEN:
             if (options & 0x1): // 0x1 keeps comments
                 fputs(token.str, output)
                 continue
             else:
                 fallthrough
+
         case IDENTIFIER_TOKEN:
             if (options & 0x2) || token.kind != IDENTIFIER_TOKEN:
                 fallthrough // 0x2 returns identifiers
+
         case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN:
             fallthrough
+
         case END_OF_LINE_TOKEN, ESCAPED_LINE_TOKEN, END_OF_FILE_TOKEN:
             store_token(&token)
             return token_count
+
         case GOTO_TAG_TOKEN:
             fputc(':', output); // => -> :
             fputs(token.str + 2, output)
             continue
+
         fputs(token.str, output)
         token_count++
