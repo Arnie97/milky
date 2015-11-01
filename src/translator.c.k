@@ -52,7 +52,7 @@ void parse_file(void):
 static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, void *label):
     Token temp
     for ;;:
-        parse_expression(2)
+        parse_expression(0)
         switch:
             next_token(token)->kind
 
@@ -219,7 +219,7 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
         throw(31, "Unhandled keyword", token)
 
     // if, elif, while, for, repeat
-    if !parse_expression(1):
+    if !parse_expression(0x1 | 0x2 | 0x4):
         throw(35, "Expected conditions before colon", token)
     else:
         conditions_processed => status = BEFORE_COLON
@@ -252,7 +252,8 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                     fallthrough
                 default:
                     fputc('{', output)
-                if parse_expression(1):
+
+                if parse_expression(0x1 | 0x2 | 0x4):
                     status = INLINE_STATEMENT
                     fputc('}', output)
                     return
@@ -317,22 +318,25 @@ static inline int parse_expression(char options):
             next_token(&token)->kind
 
         case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN, MULTILINE_COMMENT_TOKEN:
-            if (options & 0x1): // 0x1 keeps comments
+            if (options & 0x1) == 0:
+                goto exit
+            else:
                 fputs(token.str, output)
                 continue
-            else:
-                fallthrough
 
         case IDENTIFIER_TOKEN:
-            if (options & 0x2) || token.kind != IDENTIFIER_TOKEN:
-                fallthrough // 0x2 returns identifiers
+            if !(options & 0x2):
+                goto exit
 
-        case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN:
-            fallthrough
+        case ESCAPED_LINE_TOKEN:
+            if !(options & 0x4):
+                goto exit
+            else:
+                fputs(token.str, output)
+                continue
 
-        case END_OF_LINE_TOKEN, ESCAPED_LINE_TOKEN, END_OF_FILE_TOKEN:
-            store_token(&token)
-            return token_count
+        case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN, END_OF_LINE_TOKEN, END_OF_FILE_TOKEN:
+            goto exit
 
         case GOTO_TAG_TOKEN:
             fputc(':', output); // => -> :
@@ -341,3 +345,6 @@ static inline int parse_expression(char options):
 
         fputs(token.str, output)
         token_count++
+
+    exit => store_token(&token)
+    return token_count

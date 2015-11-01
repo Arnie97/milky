@@ -27,10 +27,13 @@ comment */  switch:
                 foo
             case 1:
                 tag => puts(piyo)
-            case 2:
+            case (
+                2 + 0
+            ):
                 if bar == 0:
                     fallthrough
-                elif sizeof(pants) != 32:
+                elif sizeof(pants) \
+                        != 32:
                     printf("size of pants\n");
                 else:
                     switch:

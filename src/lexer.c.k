@@ -108,6 +108,10 @@ int get_token(Token *token):
 
         switch:
             current_char
+        case '\\':
+            if next_char == '\n':
+                line_pos++
+                continue
         case '-':
             if next_char == '>':
                 token->kind = OPERATOR_TOKEN
