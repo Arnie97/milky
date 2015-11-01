@@ -18,7 +18,7 @@ static void parse_block(Token *, TranslatorStatus, void *)
 static int parse_expression(char)
 
 
-static inline void next_token(Token *token):
+static inline Token *next_token(Token *token):
     static TokenKind previous
     if look_ahead_count:
         *token = look_ahead_token[--look_ahead_count]
@@ -27,6 +27,7 @@ static inline void next_token(Token *token):
         if previous == UNINDENT_TOKEN && token->kind == UNINDENT_TOKEN:
             token->type ^= 0x80 // add a semicolon
         previous = token->kind
+    return token
 
 
 static inline void store_token (Token *token):
@@ -52,9 +53,8 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
     Token temp
     for ;;:
         parse_expression(2)
-        next_token(token)
         switch:
-            token->kind
+            next_token(token)->kind
 
         case IDENTIFIER_TOKEN:
             if *block == STRUCT_BLOCK:
@@ -81,6 +81,8 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             case 11: // pass
                 pass
             default:
+                if *block == ENUM_BLOCK || (*block == STRUCT_BLOCK && token->type < 12):
+                    throw(34, "Unexpected keyword in this context", token)
                 parse_block(token, AFTER_KEYWORD, label)
 
         case END_OF_LINE_TOKEN, MULTILINE_COMMENT_TOKEN:
@@ -97,8 +99,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             fallthrough
 
         case ESCAPED_LINE_TOKEN:
-            next_token(&temp)
-            if temp.kind == SHARP_TOKEN:
+            if next_token(&temp)->kind == SHARP_TOKEN:
                 *status = PREPROCESSOR
             store_token(&temp)
             fallthrough
@@ -107,8 +108,7 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             fputs(token->str, output)
 
         case LINE_COMMENT_TOKEN:
-            next_token(&temp)
-            if temp.kind == UNINDENT_TOKEN:
+            if next_token(&temp)->kind == UNINDENT_TOKEN:
                 token->type = 1
                 store_token(token)
                 store_token(&temp)
@@ -204,7 +204,10 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
         block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK
         fputs("typedef ", output)
         fputs(token->str, output)
-        next_token(token)
+
+        while next_token(token)->kind == BLOCK_COMMENT_TOKEN:
+            fputs(token->str, output)
+
         if token->kind == IDENTIFIER_TOKEN:
             strcpy(type_name, token->str)
             fputs(token->str, output)
@@ -222,9 +225,8 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
         conditions_processed => status = BEFORE_COLON
 
     for context = 0;;:
-        next_token(token)
         switch:
-            token->kind
+            next_token(token)->kind
 
         case COLON_TOKEN:
             if status != BEFORE_COLON:
@@ -311,9 +313,8 @@ static inline int parse_expression(char options):
     int token_count = 0
     Token token
     for ;;:
-        next_token(&token)
         switch:
-            token.kind
+            next_token(&token)->kind
 
         case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN, MULTILINE_COMMENT_TOKEN:
             if (options & 0x1): // 0x1 keeps comments

@@ -48,7 +48,7 @@ comment */  switch:
             default:
 /* weird! */    printf("foo is unknown\n")
             foo += bar
-    elif foo != 9:
+    elif /* more weird */ foo != /* baka */ 9:
         for int i = 0;i < 10;++i:
             printf("%d ", i)
     else:
@@ -64,7 +64,7 @@ comment */  switch:
     return 0
 
 typedef int element
-struct Jinkela:
+struct /* most weird */ Jinkela:
     element Nitrogen => 1
     element Phosphorus => 2
     element Potassium => 4
