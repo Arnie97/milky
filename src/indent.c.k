@@ -83,6 +83,21 @@ void get_indent(Token *token):
             continue
         case ESCAPED_LINE_TOKEN:
             throw(21, "Escaping an empty line", token)
+        case SHARP_TOKEN:
+            while (
+                token->kind != END_OF_LINE_TOKEN &&
+                token->kind != MULTILINE_COMMENT_TOKEN &&
+                token->kind != END_OF_FILE_TOKEN
+            ):
+                if token->kind == KEYWORD_TOKEN:
+                    token->kind = IDENTIFIER_TOKEN
+                store_token(token)
+                next_token(token, 1)
+            if token->kind == END_OF_FILE_TOKEN:
+                fallthrough
+            else:
+                first_new_line = 1
+                goto hell
         case KEYWORD_TOKEN:
             settled_by = token->type
             fallthrough
