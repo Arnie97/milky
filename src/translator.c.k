@@ -30,7 +30,7 @@ static inline Token *next_token(Token *token):
     return token
 
 
-static inline void store_token (Token *token):
+static inline void store_token(Token *token):
     look_ahead_token[look_ahead_count++] = *token
 
 
