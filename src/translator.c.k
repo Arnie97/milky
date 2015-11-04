@@ -148,6 +148,7 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
         block = FUNCTION_BLOCK
         goto conditions_processed
 
+    int expected_conditions = 0
     switch:
         token->type
 
@@ -155,29 +156,30 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
         block = token->type? WHILE_BLOCK: IF_BLOCK
         fputs(token->str, output)
         fputc('(', output)
+        expected_conditions = 1
 
     case 1: // elif -> else if
         block = ELIF_BLOCK
         if !context:
             throw(34, "Unexpected keyword in this context", token)
         fputs("else if (", output)
+        expected_conditions = 1
 
     case 2: // else { statement }
         block = ELSE_BLOCK
         if !context:
             throw(34, "Unexpected keyword in this context", token)
         fputs(token->str, output)
-        goto conditions_processed
 
     case 6: // repeat (cond) { statement }
         block = REPEAT_BLOCK
         new_label = rand()
         fprintf(output, "goto _repeat_%x; while (", new_label)
+        expected_conditions = 1
 
     case 7: // switch (expr) { statement }
         block = SWITCH_BLOCK
         fputs(token->str, output)
-        goto conditions_processed
 
     case 8: // case 9, 7: statement
         block = CASE_BLOCK
@@ -190,7 +192,6 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                 fputs(token->str, output)
             next_token(token)
         store_token(token)
-        goto conditions_processed
 
     case 9: // default: statement
         block = DEFAULT_BLOCK
@@ -198,7 +199,6 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
             throw(34, "Unexpected keyword in this context", token)
         context = 0
         fputs(token->str, output)
-        goto conditions_processed
 
     case 12, 13, 14: // typedef struct { list } name
         block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK
@@ -213,14 +213,15 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
             fputs(token->str, output)
         else:
             throw(35, "Expected type name before colon", token)
-        goto conditions_processed
 
     default:
         throw(31, "Unhandled keyword", token)
 
-    // if, elif, while, for, repeat
-    if !parse_expression(0x1 | 0x2 | 0x4):
-        throw(35, "Expected conditions before colon", token)
+    int conditions = parse_expression(0x1 | 0x2 | 0x4)
+    if !expected_conditions && conditions:
+        throw(35, "Unexpected conditions", token)
+    elif expected_conditions && !conditions:
+        throw(35, "Expected conditions", token)
     else:
         conditions_processed => status = BEFORE_COLON
 
