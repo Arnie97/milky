@@ -17,7 +17,8 @@ void load_file(FILE *fp):
     int size = 0, i = 2
     for char c; (c = fgetc(fp)) != EOF; line[i++] = c:
         if i > size - 5:
-            if !(line = realloc(line, size += BUFFER_SIZE)):
+            line = realloc(line, size += BUFFER_SIZE)
+            if !line:
                 throw(3, "Insufficient memory", NULL)
 
     line_pos = 1
@@ -78,13 +79,16 @@ int main(int argc, char *argv[]):
 
         else: // treat argument as a file name
             file_name = argv[i]
-
-            if ((name_ext = strrchr(file_name, '.')) == NULL ||
-                    (strcmp(name_ext, ".milk") && strcmp(name_ext, ".k"))):
+            name_ext = strrchr(file_name, '.')
+            if (
+                !name_ext ||
+                (strcmp(name_ext, ".milk") && strcmp(name_ext, ".k"))
+            ):
                 throw(7, "File format not recognized", NULL)
 
             elif !output_name: // output file name not specified
-                if !(output_name = calloc(strlen(file_name), sizeof(char))):
+                output_name = calloc(strlen(file_name), sizeof(char))
+                if !output_name:
                     throw(3, "Insufficient memory", NULL)
                 else:
                     strncpy(output_name, file_name, name_ext - file_name)

@@ -13,8 +13,17 @@ static Token look_ahead_token[2]
 static int look_ahead_count
 static char context
 
-static void parse_statement(Token *, TranslatorStatus *, BlockStatus *, void *)
-static void parse_block(Token *, TranslatorStatus, void *)
+static void parse_statement(
+    Token *,
+    TranslatorStatus *,
+    BlockStatus *,
+    void *label
+)
+static void parse_block(
+    Token *,
+    TranslatorStatus,
+    void *label
+)
 static int parse_expression(char)
 
 
@@ -49,7 +58,12 @@ void parse_file(void):
     look_ahead_queue(DESTROY)
 
 
-static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus *block, void *label):
+static void parse_statement(
+    Token *token,
+    TranslatorStatus *status,
+    BlockStatus *block,
+    void *label
+):
     Token temp
     for ;;:
         parse_expression(0)
@@ -81,7 +95,10 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             case 11: // pass
                 pass
             default:
-                if *block == ENUM_BLOCK || (*block == STRUCT_BLOCK && token->type < 12):
+                if (
+                    *block == ENUM_BLOCK ||
+                    (*block == STRUCT_BLOCK && token->type < 12)
+                ):
                     throw(34, "Unexpected keyword in this context", token)
                 parse_block(token, AFTER_KEYWORD, label)
 
@@ -140,7 +157,11 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
             throw(31, "Unhandled statement", token)
 
 
-static void parse_block(Token *token, TranslatorStatus status, void *label):
+static void parse_block(
+    Token *token,
+    TranslatorStatus status,
+    void *label
+):
     int new_label = 0
     char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
@@ -336,7 +357,8 @@ static inline int parse_expression(char options):
                 fputs(token.str, output)
                 continue
 
-        case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN, END_OF_LINE_TOKEN, END_OF_FILE_TOKEN:
+        case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, \
+                COLON_TOKEN, END_OF_LINE_TOKEN, END_OF_FILE_TOKEN:
             goto exit
 
         case GOTO_TAG_TOKEN:

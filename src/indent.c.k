@@ -60,7 +60,8 @@ void get_indent(Token *token):
         hell => switch:
             token->kind
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
-            current_indent = strlen(token->str) - (int)(strrchr(token->str, '\n') - token->str + 1) / sizeof(char)
+            current_indent = strrchr(token->str, '\n') - token->str + 1
+            current_indent = strlen(token->str) - current_indent / sizeof(char)
             if first_new_line:
                 first_new_line = 0
             else:
