@@ -207,9 +207,16 @@ static void parse_block(
         if !context:
             throw(34, "Unexpected keyword in this context", token)
         while token->kind != COLON_TOKEN:
-            if token->kind == COMMA_TOKEN:
+            switch:
+                token->kind
+            case COMMA_TOKEN:
                 fputs(": case ", output)
-            else:
+            case ESCAPED_LINE_TOKEN:
+                throw(36, "Expected colons", token)
+            case END_OF_FILE_TOKEN:
+                throw(36, "Expected colons", NULL)
+            default:
+                dprintf(("[%d,%s]", token->kind, token->str))
                 fputs(token->str, output)
             next_token(token)
         store_token(token)
