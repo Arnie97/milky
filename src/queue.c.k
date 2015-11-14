@@ -3,12 +3,12 @@
 #include "token.h"
 #include "queue.h"
 
-#define isempty(queue) (queue->front == NULL && queue->rear == NULL && queue->size == 0)
+#define isempty(queue) (!(queue->front || queue->rear || queue->size))
 
 
 Queue *init(void):
     Queue *queue = malloc(sizeof(Queue))
-    if queue != NULL:
+    if queue:
         queue->front = NULL
         queue->rear = NULL
         queue->size = 0
@@ -23,7 +23,7 @@ void destroy(Queue *queue):
 
 Node *enqueue(Queue *queue, Token token):
     Node *node = malloc(sizeof(Node))
-    if node != NULL:
+    if node:
         node->data = token
         node->next = NULL
 
@@ -39,8 +39,8 @@ Node *enqueue(Queue *queue, Token token):
 
 Node *dequeue(Queue *queue, Token *token):
     Node *node = queue->front
-    if !isempty(queue) && node != NULL:
-        if token != NULL:
+    if !isempty(queue) && node:
+        if token:
             *token = node->data
         queue->size--
         queue->front = node->next

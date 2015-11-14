@@ -124,7 +124,7 @@ void get_indent(Token *token):
     if indent_change < 0:
         token->kind = UNINDENT_TOKEN
         token->str[0] = '\0'
-        if strchr_i(indents, current_indent) == NULL:
+        if !strchr_i(indents, current_indent):
             throw(22, "Unindent does not match any outer indentation level", token)
         dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent))
         indents[indent_levels - 1] = 0

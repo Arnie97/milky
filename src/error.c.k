@@ -10,7 +10,7 @@ jmp_buf exception
 
 
 void throw(int error_code, char *message, Token *token):
-    if token != NULL:
+    if token:
         int scanned = 0
         char *cursor = line
         fprintf(stderr, "\n\033[36;1m%s:\033[32;1m%d:%d: \033[31;1m%s\033[0m\n",
@@ -32,11 +32,11 @@ void throw(int error_code, char *message, Token *token):
         fprintf(stderr,
             "\n\033[36;1m%s: \033[31;1m%s\033[0m\n", file_name, message)
 
-    if line != NULL:
+    if line:
         free(line)
         line = NULL
 
-    if token != NULL || error_code == 9:
+    if token || error_code == 9:
         dputs("Entering longjmp...")
         longjmp(exception, error_code)
     else:

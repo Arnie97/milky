@@ -17,7 +17,7 @@ void load_file(FILE *fp):
     int size = 0, i = 2
     for char c; (c = fgetc(fp)) != EOF; line[i++] = c:
         if i > size - 5:
-            if (line = realloc(line, size += BUFFER_SIZE)) == NULL:
+            if !(line = realloc(line, size += BUFFER_SIZE)):
                 throw(3, "Insufficient memory", NULL)
 
     line_pos = 1
@@ -32,14 +32,14 @@ void load_file(FILE *fp):
 void open_file(const char *input_name, const char *output_name):
     dprintf(("%s >> %s\n", input_name, output_name))
     FILE *fp_in = fopen(input_name, "r")
-    if fp_in == NULL:
+    if !fp_in:
         goto handler
     else:
         load_file(fp_in)
         fclose(fp_in)
 
     FILE *fp_out = fopen(output_name, "w")
-    if fp_out == NULL:
+    if !fp_out:
         goto handler
 
     else:
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]):
             if strcmp(argv[i], "-o") == 0:
                 if ++i >= argc:
                     throw(4, "Missing filename after '-o'", NULL)
-                elif output_name != NULL:
+                elif output_name:
                     throw(5, "Cannot specify multiple output files", NULL)
                 else:
                     output_name = argv[i]
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]):
                     (strcmp(name_ext, ".milk") && strcmp(name_ext, ".k"))):
                 throw(7, "File format not recognized", NULL)
 
-            elif output_name == NULL: // output file name not specified
-                if (output_name = calloc(strlen(file_name), sizeof(char))) == NULL:
+            elif !output_name: // output file name not specified
+                if !(output_name = calloc(strlen(file_name), sizeof(char))):
                     throw(3, "Insufficient memory", NULL)
                 else:
                     strncpy(output_name, file_name, name_ext - file_name)
