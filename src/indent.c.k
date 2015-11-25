@@ -16,24 +16,20 @@ size_t strlen_i(const int *s)
 
 
 static void get_escaped(Token *token):
-    static int ternary_expressions, unclosed_brackets
+    static int unclosed_brackets, quote
     switch:
         token->kind
     case '(', '[', '{':
         unclosed_brackets++
     case ')', ']', '}':
         unclosed_brackets--
-    case '?':
-        ternary_expressions++
-    case ':':
-        if ternary_expressions:
-            ternary_expressions--
-            token->kind = ESCAPED_COLON_TOKEN
+    case '\'':
+        quote = !quote
     case END_OF_LINE_TOKEN:
-        if unclosed_brackets:
+        if unclosed_brackets || quote:
             token->kind = ESCAPED_LINE_TOKEN
     case MULTILINE_COMMENT_TOKEN:
-        if unclosed_brackets:
+        if unclosed_brackets || quote:
             token->kind = BLOCK_COMMENT_TOKEN
 
 
@@ -83,21 +79,6 @@ void get_indent(Token *token):
             continue
         case ESCAPED_LINE_TOKEN:
             throw(21, "Escaping an empty line", token)
-        case SHARP_TOKEN:
-            while (
-                token->kind != END_OF_LINE_TOKEN &&
-                token->kind != MULTILINE_COMMENT_TOKEN &&
-                token->kind != END_OF_FILE_TOKEN
-            ):
-                if token->kind == KEYWORD_TOKEN:
-                    token->kind = IDENTIFIER_TOKEN
-                store_token(token)
-                next_token(token, 1)
-            if token->kind == END_OF_FILE_TOKEN:
-                fallthrough
-            else:
-                first_new_line = 1
-                goto hell
         case KEYWORD_TOKEN:
             settled_by = token->type
             fallthrough

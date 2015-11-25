@@ -1,22 +1,16 @@
 #ifndef KEYWORD_H_INCLUDED
 #define KEYWORD_H_INCLUDED
 
-static char *keywords[15] = {
+static char *keywords[9] = {
     "if",
-    "elif",
+    "iferr",
     "else",
     "for",
-    "do",
     "while",
     "repeat",
     "switch",
     "case",
-    "default",
-    "fallthrough",
-    "pass",
-    "enum",
-    "struct",
-    "union"
+    "pass"
 }
 
 #endif /* KEYWORD_H_INCLUDED */

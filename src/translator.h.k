@@ -14,15 +14,11 @@ enum BlockStatus:
     UNKNOWN_BLOCK,
     FUNCTION_BLOCK,
     IF_BLOCK,
-    ELIF_BLOCK,
     ELSE_BLOCK,
     WHILE_BLOCK,
     REPEAT_BLOCK,
     SWITCH_BLOCK,
-    CASE_BLOCK,
-    DEFAULT_BLOCK,
-    ENUM_BLOCK,
-    STRUCT_BLOCK
+    CASE_BLOCK
 
 void parse_file(void)
 

@@ -63,14 +63,11 @@ int get_token(Token *token):
 
         switch:
             token->kind
-        case CHAR_TOKEN, STRING_TOKEN, MULTILINE_STRING_TOKEN:
+        case STRING_TOKEN, MULTILINE_STRING_TOKEN:
             if escaped:
                 escaped = 0
             elif current_char == '\\':
                 escaped = 1
-            elif token->kind == CHAR_TOKEN:
-                if current_char == '\'':
-                    retpos
             elif current_char == '"':
                 retpos
             continue
@@ -108,83 +105,50 @@ int get_token(Token *token):
 
         switch:
             current_char
+
         case '\\':
             if next_char == '\n':
                 line_pos++
                 continue
-        case '-':
-            if next_char == '>':
-                token->kind = OPERATOR_TOKEN
-                append
-                current_char = next_char
             else:
-                fallthrough
-        case '+':
-            if current_char == next_char:
-                token->kind = ASSIGNMENT_TOKEN
+                token->kind = CHAR_TOKEN
                 append
-                // current_char = next_char
-            else:
-                fallthrough
-        case '&', '|':
-            if current_char == next_char:
-                token->kind = OPERATOR_TOKEN
                 append
-                // current_char = next_char
-            else:
-                fallthrough
-        case '*', '/', '^', '%':
-            if next_char == '=':
-                token->kind = ASSIGNMENT_TOKEN
                 append
-                current_char = next_char
-            else:
-                fallthrough
-        case '~':
+                retpos
+
+        case '+', '-', '*', '/', '^', '%', '|':
             token->kind = OPERATOR_TOKEN
+
         case '=':
             if next_char == '>':
-                token->kind = GOTO_TAG_TOKEN
+                token->kind = ASSIGNMENT_TOKEN
                 append
                 current_char = next_char
             else:
                 fallthrough
+
         case '!', '<', '>':
             if next_char != '=':
                 if current_char == '=':
                     token->kind = ASSIGNMENT_TOKEN
-                    break
                 elif current_char == '!':
                     token->kind = OPERATOR_TOKEN
-                    break
-                elif current_char == next_char:
-                    token->kind = OPERATOR_TOKEN
-                    append
-                    // current_char = next_char
-                    break
             else:
+                token->type = current_char
                 append
                 current_char = next_char
             token->kind = COMPARISON_TOKEN
-        case ':':
-            if current_char == next_char:
-                token->kind = SCOPE_TOKEN
-                append
-                // current_char = next_char
-            else:
-                fallthrough
-        case '(', ')', '[', ']', '{', '}', '.', ',', '#', '?', ';':
+
+        case '(', ')', '[', ']', '{', '}', '.', ',', '#', '?', ':', ';', '\'':
             token->kind = current_char
-        case '\'':
-            escaped = 0
-            token->kind = CHAR_TOKEN
-            append
-            continue
+
         case '\"':
             escaped = 0
             token->kind = STRING_TOKEN
             append
             continue
+
         append
         retpos
     return 0

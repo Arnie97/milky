@@ -56,41 +56,19 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
         switch:
             next_token(token)->kind
 
-        case IDENTIFIER_TOKEN:
-            if *block == STRUCT_BLOCK:
-                #define isempty(x) (isspace(*(x)) || *(x) == '\0')
-                char *p = label, *q = token->str
-                while !isempty(p) && !isempty(q):
-                    if *p++ != *q++:
-                        goto hell
-                if isempty(p) && isempty(q):
-                    fputs("struct ", output)
-            hell => fputs(token->str, output)
-
         case KEYWORD_TOKEN:
             switch:
                 token->type
-            case 4: // do
-                fputs("_do", output)
-            case 10: // fallthrough
-                if /* not_in_case */0:
-                    throw(34, "Unexpected keyword in this context", token)
-                while *(int *)label == 0:
-                    *(int *)label = rand()
-                fprintf(output, "goto _fallthrough_%x;", *(int *)label)
-            case 11: // pass
+            case 8: // pass
                 pass
             default:
-                if *block == ENUM_BLOCK || (*block == STRUCT_BLOCK && token->type < 12):
-                    throw(34, "Unexpected keyword in this context", token)
                 parse_block(token, AFTER_KEYWORD, label)
 
         case END_OF_LINE_TOKEN, MULTILINE_COMMENT_TOKEN:
             if *status == BEFORE_INDENT:
                 throw(33, "Expected indent", token)
             elif *status != PREPROCESSOR:
-                if *block != ENUM_BLOCK:
-                    fputc(';', output)
+                fputc(':', output)
             elif token->kind == END_OF_LINE_TOKEN:
                 *status = INITIAL_STATUS
                 if context == -1: // skip additional newline at BOF
@@ -142,7 +120,6 @@ static void parse_statement(Token *token, TranslatorStatus *status, BlockStatus 
 
 static void parse_block(Token *token, TranslatorStatus status, void *label):
     int new_label = 0
-    char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
     if status == BEFORE_COLON:
         block = FUNCTION_BLOCK
@@ -150,19 +127,11 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
 
     int expected_conditions = 0
     switch:
-        token->type
+        token.type
 
-    case 0, 3, 5: // if (cond) { statement }
-        block = token->type? WHILE_BLOCK: IF_BLOCK
+    case 0, 1, 3: // IF... THEN... ELSE... END
+        block = (token->type < 2)? WHILE_BLOCK: IF_BLOCK
         fputs(token->str, output)
-        fputc('(', output)
-        expected_conditions = 1
-
-    case 1: // elif -> else if
-        block = ELIF_BLOCK
-        if !context:
-            throw(34, "Unexpected keyword in this context", token)
-        fputs("else if (", output)
         expected_conditions = 1
 
     case 2: // else { statement }
@@ -171,48 +140,20 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
             throw(34, "Unexpected keyword in this context", token)
         fputs(token->str, output)
 
-    case 6: // repeat (cond) { statement }
+    case 5: // repeat (cond) { statement }
         block = REPEAT_BLOCK
         new_label = rand()
-        fprintf(output, "goto _repeat_%x; while (", new_label)
+        fprintf(output, "goto? _repeat_%x; while (", new_label)
         expected_conditions = 1
 
-    case 7: // switch (expr) { statement }
+    case 6: // CASE... END
         block = SWITCH_BLOCK
         fputs(token->str, output)
 
-    case 8: // case 9, 7: statement
+    case 7: // CASE... IF... THEN... END
         block = CASE_BLOCK
         if !context:
             throw(34, "Unexpected keyword in this context", token)
-        while token->kind != COLON_TOKEN:
-            if token->kind == COMMA_TOKEN:
-                fputs(": case ", output)
-            else:
-                fputs(token->str, output)
-            next_token(token)
-        store_token(token)
-
-    case 9: // default: statement
-        block = DEFAULT_BLOCK
-        if !context:
-            throw(34, "Unexpected keyword in this context", token)
-        context = 0
-        fputs(token->str, output)
-
-    case 12, 13, 14: // typedef struct { list } name
-        block = (token->type == 12)? ENUM_BLOCK: STRUCT_BLOCK
-        fputs("typedef ", output)
-        fputs(token->str, output)
-
-        while next_token(token)->kind == BLOCK_COMMENT_TOKEN:
-            fputs(token->str, output)
-
-        if token->kind == IDENTIFIER_TOKEN:
-            strcpy(type_name, token->str)
-            fputs(token->str, output)
-        else:
-            throw(35, "Expected type name before colon", token)
 
     default:
         throw(31, "Unhandled keyword", token)
@@ -236,27 +177,14 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
                 status = BEFORE_INDENT
                 switch:
                     block
-                case REPEAT_BLOCK:
-                    fprintf(output, "){ _repeat_%x: ", new_label)
-                case SWITCH_BLOCK:
-                    fputc('(', output)
-                    continue
-                case CASE_BLOCK, DEFAULT_BLOCK:
-                    label = &new_label
-                    fputs(token->str, output)
-                    fputc(';', output) // declaration magic
-                case STRUCT_BLOCK:
-                    label = &type_name
-                    fputc('{', output)
-                case IF_BLOCK, ELIF_BLOCK, WHILE_BLOCK:
-                    fputc(')', output)
-                    fallthrough
-                default:
-                    fputc('{', output)
+                case IF_BLOCK:
+                    fputs(" THEN", output)
+                case WHILE_BLOCK:
+                    fputc(" REPEAT", output)
 
                 if parse_expression(0x1 | 0x2 | 0x4):
                     status = INLINE_STATEMENT
-                    fputc('}', output)
+                    fputc("END:", output)
                     return
 
         case INDENT_TOKEN:
@@ -270,41 +198,27 @@ static void parse_block(Token *token, TranslatorStatus status, void *label):
             if token->type < 0:
                 token->type ^= 0x80
                 status = PREPROCESSOR
-            switch:
-                block
-            case SWITCH_BLOCK:
-                fputs("){", output)
-            case ENUM_BLOCK:
-                pass
-            default:
-                if status != PREPROCESSOR:
-                    fputc(';', output)
+
+            if block != SWITCH_BLOCK && status != PREPROCESSOR:
+                fputc(':', output)
 
             switch:
                 block
-            case IF_BLOCK, ELIF_BLOCK:
-                if token->type == 1 || token->type == 2: // elif, else
+            case IF_BLOCK:
+                if token->type == 2: // else
                     context = 1
-                fputc('}', output)
-            case ENUM_BLOCK, STRUCT_BLOCK:
-                fprintf(output, "} %s;", type_name)
+                fputs("END:", output)
             case SWITCH_BLOCK:
-                if token->type == 8 || token->type == 9: // case, default
+                if token->type == 7: // case
                     context = 1
                 else:
-                    throw(37, "Expected 'case' or 'default'", token)
+                    throw(37, "Expected 'case'", token)
             case CASE_BLOCK:
-                if token->type == 8 || token->type == 9: // case, default
+                if token->type == 7: // case
                     context = 1
-                    fputs("break;", output)
-                    if new_label:
-                        fprintf(output, " _fallthrough_%x: ;", new_label)
-                elif new_label:
-                    throw(39, "Expected 'case' or 'default' after 'fallthrough'", token)
-                else:
-                    fallthrough
+                fallthrough
             default:
-                fputc('}', output)
+                fputs("END:", output)
             return
 
         default:
@@ -325,10 +239,6 @@ static inline int parse_expression(char options):
                 fputs(token.str, output)
                 continue
 
-        case IDENTIFIER_TOKEN:
-            if !(options & 0x2):
-                goto exit
-
         case ESCAPED_LINE_TOKEN:
             if !(options & 0x4):
                 goto exit
@@ -339,10 +249,24 @@ static inline int parse_expression(char options):
         case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, COLON_TOKEN, END_OF_LINE_TOKEN, END_OF_FILE_TOKEN:
             goto exit
 
-        case GOTO_TAG_TOKEN:
-            fputc(':', output); // => -> :
-            fputs(token.str + 2, output)
-            continue
+        case ASSIGNMENT_TOKEN:
+            strcpy(token.str, "\\|>")
+
+        case COMPARISON_TOKEN:
+            switch:
+                token.type
+            case '<':
+                strcpy(token.str, "\\<=")
+            case '>':
+                strcpy(token.str, "\\>=")
+            case '!':
+                strcpy(token.str, "\\=/")
+
+        case ',':
+            strcpy(token.str, ";")
+
+        case ';':
+            strcpy(token.str, ":")
 
         fputs(token.str, output)
         token_count++

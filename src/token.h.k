@@ -20,8 +20,6 @@ enum TokenKind:
     OPERATOR_TOKEN,
     ASSIGNMENT_TOKEN,
     COMPARISON_TOKEN,
-    SCOPE_TOKEN,
-    GOTO_TAG_TOKEN,
 
     LEFT_PAREN_TOKEN = '(',   RIGHT_PAREN_TOKEN = ')',
     LEFT_BRACKET_TOKEN = '[', RIGHT_BRACKET_TOKEN = ']',
@@ -32,7 +30,7 @@ enum TokenKind:
     COLON_TOKEN = ':',
     ESCAPED_COLON_TOKEN = '"',
     SEMICOLON_TOKEN = ';',
-    SHARP_TOKEN = '#'
+    QUOTE_TOKEN = '\''
 
 
 #define MAX_TOKEN_SIZE (4096)
