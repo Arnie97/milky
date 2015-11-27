@@ -107,15 +107,14 @@ static void parse_statement(
                 throw(33, "Expected indent", token)
             elif *status != PREPROCESSOR:
                 if *block != ENUM_BLOCK:
-                    fputc(';', output)
-            elif token->kind == END_OF_LINE_TOKEN:
+                    if token->kind != END_OF_LINE_TOKEN || !token->type:
+                        fputc(';', output)
+            elif token->kind == END_OF_LINE_TOKEN && !token->type:
                 *status = INITIAL_STATUS
                 if context == -1: // skip additional newline at BOF
                     context = 0
                     token->str[0] = '\0'
-            fallthrough
 
-        case ESCAPED_LINE_TOKEN:
             if next_token(&temp)->kind == SHARP_TOKEN:
                 *status = PREPROCESSOR
             store_token(&temp)
@@ -131,7 +130,7 @@ static void parse_statement(
                 store_token(&temp)
                 return
             elif temp.kind == END_OF_LINE_TOKEN:
-                temp.kind = ESCAPED_LINE_TOKEN
+                temp.type = 5
 
             if token->type < 0:
                 fputc(';', output)
@@ -211,8 +210,13 @@ static void parse_block(
                 token->kind
             case COMMA_TOKEN:
                 fputs(": case ", output)
-            case ESCAPED_LINE_TOKEN:
-                throw(36, "Expected colons", token)
+            case END_OF_LINE_TOKEN:
+                switch:
+                    token->type
+                case 1, 2, 5:
+                    pass
+                default:
+                    throw(36, "Expected colons", token)
             case END_OF_FILE_TOKEN:
                 throw(36, "Expected colons", NULL)
             default:
@@ -347,7 +351,7 @@ static inline int parse_expression(char options):
             next_token(&token)->kind
 
         case LINE_COMMENT_TOKEN, BLOCK_COMMENT_TOKEN, MULTILINE_COMMENT_TOKEN:
-            if (options & 0x1) == 0:
+            if !(options & 0x1):
                 goto exit
             else:
                 fputs(token.str, output)
@@ -357,15 +361,15 @@ static inline int parse_expression(char options):
             if !(options & 0x2):
                 goto exit
 
-        case ESCAPED_LINE_TOKEN:
-            if !(options & 0x4):
+        case END_OF_LINE_TOKEN:
+            if !(options & 0x4) || !token.type:
                 goto exit
             else:
                 fputs(token.str, output)
                 continue
 
-        case INDENT_TOKEN, UNINDENT_TOKEN, KEYWORD_TOKEN, \
-                COLON_TOKEN, END_OF_LINE_TOKEN, END_OF_FILE_TOKEN:
+        case INDENT_TOKEN, UNINDENT_TOKEN, \
+                KEYWORD_TOKEN, COLON_TOKEN, END_OF_FILE_TOKEN:
             goto exit
 
         case GOTO_TAG_TOKEN:

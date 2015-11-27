@@ -51,10 +51,8 @@ int get_token(Token *token):
                 case MULTILINE_COMMENT_TOKEN:
                     pass
                 default:
-                    if last_char == '\\':
-                        token->kind = ESCAPED_LINE_TOKEN
-                    else:
-                        token->kind = END_OF_LINE_TOKEN
+                    token->kind = END_OF_LINE_TOKEN
+                    token->type = (last_char == '\\') // escaped new line
                     append
                     retpos
             append

@@ -31,7 +31,7 @@ static void get_escaped(Token *token):
             token->kind = ESCAPED_COLON_TOKEN
     case END_OF_LINE_TOKEN:
         if unclosed_brackets:
-            token->kind = ESCAPED_LINE_TOKEN
+            token->type = 2
     case MULTILINE_COMMENT_TOKEN:
         if unclosed_brackets:
             token->kind = BLOCK_COMMENT_TOKEN
@@ -59,6 +59,7 @@ void get_indent(Token *token):
         next_token(token, 1)
         hell => switch:
             token->kind
+
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
             current_indent = strrchr(token->str, '\n') - token->str + 1
             current_indent = strlen(token->str) - current_indent / sizeof(char)
@@ -68,25 +69,27 @@ void get_indent(Token *token):
                 token->kind = BLOCK_COMMENT_TOKEN
             store_token(token)
             continue
+
         case END_OF_LINE_TOKEN: // empty line too
-            current_indent = -1
+            if token->type:
+                throw(21, "Escaping an empty line", token)
+            else:
+                current_indent = -1
+
             if first_new_line:
                 first_new_line = 0
             else:
-                token->kind = ESCAPED_LINE_TOKEN
-            fallthrough
+                token->type = 3
+
         case LINE_COMMENT_TOKEN:
             token->type = 1
-            fallthrough
+
         case BLOCK_COMMENT_TOKEN:
-            current_indent += strlen(token->str)
-            store_token(token)
-            continue
-        case ESCAPED_LINE_TOKEN:
-            throw(21, "Escaping an empty line", token)
+            pass
+
         case SHARP_TOKEN:
             while (
-                token->kind != END_OF_LINE_TOKEN &&
+                !(token->kind == END_OF_LINE_TOKEN && !token->type) &&
                 token->kind != MULTILINE_COMMENT_TOKEN &&
                 token->kind != END_OF_FILE_TOKEN
             ):
@@ -94,17 +97,24 @@ void get_indent(Token *token):
                     token->kind = IDENTIFIER_TOKEN
                 store_token(token)
                 next_token(token, 1)
+
             if token->kind == END_OF_FILE_TOKEN:
                 fallthrough
             else:
                 first_new_line = 1
                 goto hell
+
         case KEYWORD_TOKEN:
             settled_by = token->type
             fallthrough
+
         default:
             indent_settled = 1
             store_token(token)
+            continue
+
+        current_indent += strlen(token->str)
+        store_token(token)
 
     // indent just settled, token not inserted
     int indent_levels = strlen_i(indents)
@@ -145,7 +155,7 @@ void get_indent(Token *token):
         next_token(token, 0)
         if indent_just_changed:
             if token->kind == END_OF_LINE_TOKEN:
-                token->kind = ESCAPED_LINE_TOKEN
+                token->type = 4
             else:
                 token->kind = BLOCK_COMMENT_TOKEN
             indent_just_changed = 0
@@ -155,11 +165,13 @@ void get_indent(Token *token):
     next_token(token, 0)
     switch:
         token->kind
-    case END_OF_LINE_TOKEN, MULTILINE_COMMENT_TOKEN:
+    case END_OF_LINE_TOKEN:
+        if !token->type:
+            fallthrough
+    case MULTILINE_COMMENT_TOKEN:
         indent_settled = 0
         goto hell
-    default:
-        return
+    return
 
 
 void look_ahead_queue(char action):
