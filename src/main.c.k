@@ -13,24 +13,30 @@ FILE *output
 jmp_buf exception
 
 
-void load_file(FILE *fp):
-    int size = 0, i = 2
-    for char c; (c = fgetc(fp)) != EOF; line[i++] = c:
-        if i > size - 5:
-            line = realloc(line, size += BUFFER_SIZE)
-            if !line:
-                throw(3, "Insufficient memory", NULL)
+static inline size_t file_size(FILE *fp):
+    fseek(fp, 0, SEEK_END)
+    size_t size = ftell(fp)
+    rewind(fp)
+    return size
 
+
+static void load_file(FILE *fp):
     line_pos = 1
+
+    size_t size = file_size(fp)
+    line = malloc(2 + size + 1 + 3)
+    if !line:
+        throw(3, "Insufficient memory", NULL)
+
     line[0] = line[1] = '\n'
-    if line[i - 1] != '\n':
-        line[i++] = '\n'
+    fread(&line[2], size, 1, fp)
+    if line[++size] != '\n':
+        line[++size] = '\n'
+    for int i = 0; i < 3; i++:
+        line[++size] = '\0'
 
-    for size = i + 3; i < size; line[i++] = '\0':
-        pass
 
-
-void open_file(const char *input_name, const char *output_name):
+static void open_file(const char *input_name, const char *output_name):
     dprintf(("%s >> %s\n", input_name, output_name))
     FILE *fp_in = fopen(input_name, "r")
     if !fp_in:
