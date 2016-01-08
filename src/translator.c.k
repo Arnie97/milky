@@ -340,7 +340,12 @@ static void parse_block(
             return
 
         default:
-            throw(31, "Unhandled token", token)
+            if status == BEFORE_INDENT:
+                throw(33, "Expected indent", token)
+            elif token->kind == END_OF_FILE_TOKEN || token->kind == END_OF_LINE_TOKEN:
+                throw(30, "Unexpected EOF", token)
+            else:
+                throw(31, "Unhandled token", token)
 
 
 static inline int parse_expression(char options):
