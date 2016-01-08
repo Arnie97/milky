@@ -27,7 +27,7 @@ void throw(int error_code, char *message, Token *token):
         fprintf(stderr, "\033[33;1m%s\033[0m", token->str)
 
         cursor += strlen(token->str)
-        while *cursor != '\n':
+        while *cursor && *cursor != '\n':
             putc(*cursor++, stderr)
         fprintf(stderr, "\033[0m\n%*s\n", token->column, "^");
     else:
