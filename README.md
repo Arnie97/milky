@@ -61,6 +61,23 @@ In this example, the milky compiler will compile `in1.c.k` into `in1.c`, `in2.c.
 As you can see, multiple inputs can be specified at the same time, hence the desired output name must be given just before the corresponding input file to prevent ambiguity.
 
 
+#### Output Style
+Milky outputs are designed to be as similar to the corresponding inputs as possible.
+Match on the line level is strictly guaranteed, which is useful when working with other tools, such as GDB or Gcov.
+
+Taking [hello.c.k above](#getting-started) and Gcov as an example:
+```bash
+$ milky hello.c.k
+$ gcc --coverage -o hello hello.c   # generates hello.gcno
+$ ./hello                           # generates hello.gcna
+$ cp hello.c.k hello.c              # uses milky source instead in Gcov
+$ gcov hello                        # creates coverage report
+```
+
+If you prefer a cleaner programming style in your outputs, simply apply a code formatter.
+[Astyle](http://astyle.sourceforge.net) or [Uncrustify](http://uncrustify.sourceforge.net) might be handy.
+
+
 #### C++ Support
 Milky was initially designed for the C language.
 As C++ is almost a super set of C, and shares its basic syntaxes, milky should work with most C++ source codes, although not guaranteed.
