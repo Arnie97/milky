@@ -48,20 +48,15 @@ get_token(Token *token)
                         token->str[pos_in_token++] = 'n';
                         token->str[pos_in_token++] = '\\';
                     }
-                    append;
-                    continue;
+                    break;
                 case BLOCK_COMMENT_TOKEN:
                     token->kind = MULTILINE_COMMENT_TOKEN;
-                    /* fallthrough; */
+                    break;
                 case MULTILINE_COMMENT_TOKEN:
-                    append;
-                    continue;
+                    break;
                 default:
-                    if (last_char == '\\') {
-                        token->kind = ESCAPED_LINE_TOKEN;
-                    } else {
-                        token->kind = END_OF_LINE_TOKEN;
-                    }
+                    token->kind = END_OF_LINE_TOKEN;
+                    token->type = (last_char == '\\') ;// escaped new line
                     append;
                     retpos;
                 }
@@ -116,10 +111,10 @@ get_token(Token *token)
                 continue;
             }
             token->str[pos_in_token] = '\0';
-            for (int type = sizeof(keywords) / sizeof(char *) - 1; type >= 0; type--) {
-                if (strcmp(token->str, keywords[type]) == 0) {
+            for (int t = sizeof(keywords) / sizeof(char *) - 1; t >= 0; t--) {
+                if (strcmp(token->str, keywords[t]) == 0) {
                     token->kind = KEYWORD_TOKEN;
-                    token->type = type;
+                    token->type = t;
                     retpos;
                 }
             }
@@ -129,6 +124,12 @@ get_token(Token *token)
         subtract;
 
         switch (current_char) {
+        case '\\':
+            if (next_char == '\n') {
+                line_pos++;
+                continue;
+            }
+            break;
         case '-':
             if (next_char == '>') {
                 token->kind = OPERATOR_TOKEN;

@@ -1,20 +1,17 @@
 #ifndef TRANSLATOR_H_INCLUDED
 #define TRANSLATOR_H_INCLUDED
 
-#define MAX_LOOK_AHEAD_TOKENS (20)
-#define MAX_INDENT_LEVELS (20)
-
-typedef enum {
+typedef enum TranslatorStatus{
     INITIAL_STATUS,
     AFTER_KEYWORD,
     BEFORE_COLON,
     BEFORE_INDENT,
     INLINE_STATEMENT,
     BEFORE_UNINDENT,
-    PREPROCESSOR,
+    PREPROCESSOR
 } TranslatorStatus;
 
-typedef enum {
+typedef enum BlockStatus{
     UNKNOWN_BLOCK,
     FUNCTION_BLOCK,
     IF_BLOCK,

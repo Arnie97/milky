@@ -1,7 +1,7 @@
 #ifndef TOKEN_H_INCLUDED
 #define TOKEN_H_INCLUDED
 
-typedef enum {
+typedef enum TokenKind {
     IDENTIFIER_TOKEN,
     KEYWORD_TOKEN,
     CHAR_TOKEN,
@@ -14,7 +14,6 @@ typedef enum {
     INDENT_TOKEN,
     UNINDENT_TOKEN,
     END_OF_LINE_TOKEN,
-    ESCAPED_LINE_TOKEN,
     END_OF_FILE_TOKEN,
 
     OPERATOR_TOKEN,
@@ -37,7 +36,7 @@ typedef enum {
 
 #define MAX_TOKEN_SIZE (4096)
 
-typedef struct {
+typedef struct Token {
     TokenKind kind;
     char type;
     char str[MAX_TOKEN_SIZE];

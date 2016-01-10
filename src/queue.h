@@ -1,14 +1,12 @@
 #ifndef QUEUE_H_INCLUDED
 #define QUEUE_H_INCLUDED
 
-#define isempty(queue) (queue->front == NULL && queue->rear == NULL && queue->size == 0)
-
 typedef struct Node {
     Token data;
     struct Node *next;
 } Node;
 
-typedef struct {
+typedef struct Queue {
     Node *front;
     Node *rear;
     int size;

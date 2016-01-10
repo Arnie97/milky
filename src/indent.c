@@ -7,7 +7,12 @@
 #include "lexer.h"
 #include "indent.h"
 
+#define MAX_INDENTATION_LEVEL (20)
+
 Queue *look_ahead_tokens;
+
+int *strchr_i(register const int *s, int c);
+size_t strlen_i(const int *s);
 
 static void
 get_escaped(Token *token)
@@ -31,14 +36,13 @@ get_escaped(Token *token)
         break;
     case END_OF_LINE_TOKEN:
         if (unclosed_brackets) {
-            token->kind = ESCAPED_LINE_TOKEN;
+            token->type = 2;
         }
         break;
     case MULTILINE_COMMENT_TOKEN:
         if (unclosed_brackets) {
             token->kind = BLOCK_COMMENT_TOKEN;
         }
-        break;
     }
 }
 
@@ -62,8 +66,9 @@ store_token(Token *token)
 void
 get_indent(Token *token)
 {
-    static char indent_settled, settled_by, current_indent, indent_just_changed;
-    static char indents[MAX_INDENTATION_LEVEL] = { 0 };
+    static char settled_by, indent_just_changed;
+    static int indent_settled, current_indent;
+    static int indents[MAX_INDENTATION_LEVEL] = { 0 };
     char first_new_line = 1;
 
     while (!indent_settled) {
@@ -71,7 +76,8 @@ get_indent(Token *token)
     hell:
         switch (token->kind) {
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
-            current_indent = strlen(token->str) - (int)(strrchr(token->str, '\n') - token->str + 1) / sizeof(char);
+            current_indent = strrchr(token->str, '\n') - token->str + 1;
+            current_indent = strlen(token->str) - current_indent / sizeof(char);
             if (first_new_line) {
                 first_new_line = 0;
             } else {
@@ -80,33 +86,55 @@ get_indent(Token *token)
             store_token(token);
             continue;
         case END_OF_LINE_TOKEN: // empty line too
-            current_indent = -1;
+            if (token->type) {
+                throw(21, "Escaping an empty line", token);
+            } else {
+                current_indent = -1;
+            }
             if (first_new_line) {
                 first_new_line = 0;
             } else {
-                token->kind = ESCAPED_LINE_TOKEN;
+                token->type = 3;
+            }
+            break;
+        case LINE_COMMENT_TOKEN:
+            token->type = 1;
+            break;
+        case BLOCK_COMMENT_TOKEN:
+            break;
+        case SHARP_TOKEN:
+            while (
+                !(token->kind == END_OF_LINE_TOKEN && !token->type) &&
+                token->kind != MULTILINE_COMMENT_TOKEN &&
+                token->kind != END_OF_FILE_TOKEN
+            ) {
+                if (token->kind == KEYWORD_TOKEN) {
+                    token->kind = IDENTIFIER_TOKEN;
+                }
+                store_token(token);
+                next_token(token, 1);
+            }
+            if (token->kind != END_OF_FILE_TOKEN) {
+                first_new_line = 1;
+                goto hell;
             }
             /* fallthrough; */
-        case LINE_COMMENT_TOKEN:
-        case BLOCK_COMMENT_TOKEN:
-            current_indent += strlen(token->str);
-            store_token(token);
-            continue;
-        case ESCAPED_LINE_TOKEN:
-            throw(21, "Escaping an empty line", token);
         case KEYWORD_TOKEN:
             settled_by = token->type;
             /* fallthrough; */
         default:
             indent_settled = 1;
             store_token(token);
+            continue;
         }
-    }
 
+        current_indent += strlen(token->str);
+        store_token(token);
+    }
     // indent just settled, token not inserted
-    char indent_levels = strlen(indents);
-    char last_indent = indent_levels? indents[indent_levels - 1]: 0;
-    char indent_change = current_indent - last_indent;
+    int indent_levels = strlen_i(indents);
+    int last_indent = indent_levels? indents[indent_levels - 1]: 0;
+    int indent_change = current_indent - last_indent;
     if (indent_change > 0) {
         token->kind = INDENT_TOKEN;
         token->str[0] = '\0';
@@ -122,7 +150,7 @@ get_indent(Token *token)
     if (indent_change < 0) {
         token->kind = UNINDENT_TOKEN;
         token->str[0] = '\0';
-        if (strchr(indents, current_indent) == NULL) {
+        if (!strchr_i(indents, current_indent)) {
             throw(22, "Unindent does not match any outer indentation level", token);
         }
         dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent));
@@ -145,7 +173,7 @@ get_indent(Token *token)
         next_token(token, 0);
         if (indent_just_changed) {
             if (token->kind == END_OF_LINE_TOKEN) {
-                token->kind = ESCAPED_LINE_TOKEN;
+                token->type = 4;
             } else {
                 token->kind = BLOCK_COMMENT_TOKEN;
             }
@@ -158,19 +186,42 @@ get_indent(Token *token)
     next_token(token, 0);
     switch (token->kind) {
     case END_OF_LINE_TOKEN:
+        if (token->type) {
+            break;
+        }
+        /* fallthrough; */
     case MULTILINE_COMMENT_TOKEN:
         indent_settled = 0;
         goto hell;
-    default:
-        return;
     }
+    return;
 }
 
 void
-look_ahead_queue(char action) {
+look_ahead_queue(char action)
+{
     if (action == INIT) {
         look_ahead_tokens = init();
     } else {
         destroy(look_ahead_tokens);
     }
+}
+
+int *
+strchr_i(register const int *s, int c)
+{
+    do {
+        if (*s == c) {
+            return (int *)s;
+        }
+    } while (*s++);
+    return NULL;
+}
+
+size_t
+strlen_i(const int *s)
+{
+    size_t i = -1;
+    while (s[++i]);
+    return i;
 }
