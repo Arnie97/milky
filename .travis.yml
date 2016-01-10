@@ -21,6 +21,9 @@ before_install:
   - sudo apt-get -qq update
 
 install:
+  - if [ "$CC" = 'clang' ]; then
+      export CC=`which clang`;
+    fi
   - if [ "$CC" = 'gcc-5' ]; then
       sudo apt-get -q install gcc-5;
     fi
