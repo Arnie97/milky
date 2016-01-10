@@ -1,5 +1,6 @@
 ### Milky - the Indent-based Language liKe pYthon
 <img src="milky.png" alt="Logo of Milky" width="200">
+[![Build Status](https://travis-ci.org/Arnie97/milky.svg)](https://travis-ci.org/Arnie97/milky)
 
 
 #### Introduction
