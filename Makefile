@@ -1,4 +1,6 @@
-.PHONY: test install milky build debug release clean distclean testclean
+.PHONY: test coverage lcov
+.PHONY: install milky build debug release
+.PHONY: clean distclean testclean
 
 ifeq ($(OS),Windows_NT)
 CC       := gcc
@@ -7,17 +9,20 @@ CC       ?= gcc
 CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch
 MILKYC   ?= milky
 
+PREFIX   ?= /usr/local
 SRCDIR   ?= src
 OBJDIR   ?= obj
 BINDIR   ?= bin
 INSTDIR  ?= $(PREFIX)/bin
 TESTDIR  ?= tests
+LCOVDIR  ?= html
 
 MILKSRCS := $(wildcard $(SRCDIR)/*.c.k)
 MILKINCS := $(wildcard $(SRCDIR)/*.h.k)
 SOURCES  := $(MILKSRCS:%.k=%)
 INCLUDES := $(MILKINCS:%.k=%)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+DUMMIES  := $(MILKSRCS:%.k=$(LCOVDIR)/%)
 
 TESTALL  := $(wildcard $(TESTDIR)/*.milk $(TESTDIR)/*.k)
 TESTCC   := $(wildcard $(TESTDIR)/*.c.k)
@@ -25,9 +30,19 @@ TESTSRCS := $(TESTALL:%.k=%)
 TESTASMS := $(TESTCC:$(TESTDIR)/%.c.k=$(OBJDIR)/%.s)
 
 TARGET   := milky
+LCOVFILE := coverage.run
 
 test: $(TESTSRCS) $(TESTASMS)
 	@echo "All tests passed! Congratulations!"
+
+coverage: CCFLAGS += -fprofile-arcs -ftest-coverage
+coverage: LDFLAGS += -lgcov
+coverage: test
+
+lcov: coverage $(DUMMIES)
+	@mkdir -p $(LCOVDIR)
+	@lcov -c -d $(OBJDIR) -b $(LCOVDIR) -o $(LCOVDIR)/$(LCOVFILE)
+	@genhtml --legend $(LCOVDIR)/$(LCOVFILE) -o $(LCOVDIR)
 
 install: release
 	@mkdir -p $(INSTDIR)
@@ -58,6 +73,10 @@ $(SOURCES) $(INCLUDES): %: %.k
 	@echo "Compiling $< to $@..."
 	@$(MILKYC) -o $@ $<
 	@printf '\n'
+
+$(DUMMIES): $(LCOVDIR)/%: %.k
+	@mkdir -p $(LCOVDIR)/$(SRCDIR)
+	@cp $< $@
 
 $(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
 	@echo "Compiling test output $<..."
