@@ -88,13 +88,10 @@ $(TESTSRCS): %: %.k build
 	@printf '\n'
 
 clean:
-	rm -r $(OBJDIR)
+	@rm -rv $(OBJDIR) $(LCOVDIR) $(SOURCES) $(INCLUDES) $(TESTSRCS) || true
 
 distclean: clean
-	rm -r $(BINDIR)
-
-testclean:
-	rm `find $(TESTDIR) -type f -not -name "*.milk" -not -name "*.k"`
+	@rm -rv $(BINDIR) || true
 
 # $(call make-depend,source-file,object-file,depend-file)
 define make-depend
