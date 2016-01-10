@@ -18,14 +18,15 @@ MILKINCS := $(wildcard $(SRCDIR)/*.h.k)
 SOURCES  := $(MILKSRCS:%.k=%)
 INCLUDES := $(MILKINCS:%.k=%)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+
+TESTALL  := $(wildcard $(TESTDIR)/*.milk $(TESTDIR)/*.k)
+TESTCC   := $(wildcard $(TESTDIR)/*.c.k)
+TESTSRCS := $(TESTALL:%.k=%)
+TESTASMS := $(TESTCC:$(TESTDIR)/%.c.k=$(OBJDIR)/%.s)
+
 TARGET   := milky
 
-TEST_ALL     := $(wildcard $(TESTDIR)/*.milk $(TESTDIR)/*.k)
-TEST_GCC     := $(wildcard $(TESTDIR)/*.c.k)
-TEST_SOURCES := $(TEST_ALL:$(TESTDIR)/%.k=$(TESTDIR)/%)
-TEST_OBJECTS := $(TEST_GCC:$(TESTDIR)/%.c.k=$(OBJDIR)/%.o)
-
-test: $(TEST_SOURCES) $(TEST_OBJECTS)
+test: $(TESTSRCS) $(TESTASMS)
 	@echo "All tests passed! Congratulations!"
 
 install: release
@@ -58,14 +59,11 @@ $(SOURCES) $(INCLUDES): %: %.k
 	@$(MILKYC) -o $@ $<
 	@printf '\n'
 
-$(TEST_OBJECTS): $(OBJDIR)/%.o: $(TESTDIR)/%.c
-	@mkdir -p `dirname $@`
-	@echo "Generating dependencies for $<..."
-	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
-	@echo "Compiling $<..."
-	@$(CC) $(CCFLAGS) -c $< -o $@
+$(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
+	@echo "Compiling test output $<..."
+	@$(CC) $(CCFLAGS) -S -c $< -o $@
 
-$(TEST_SOURCES): $(TESTDIR)/%: $(TESTDIR)/%.k build
+$(TESTSRCS): %: %.k build
 	@echo "Testing $<..."
 	@$(BINDIR)/$(TARGET) $<
 	@printf '\n'
