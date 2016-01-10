@@ -1,4 +1,4 @@
-.PHONY: test build debug release clean distclean testclean
+.PHONY: test install milky build debug release clean distclean testclean
 
 ifeq ($(OS),Windows_NT)
 CC       := gcc
@@ -13,8 +13,10 @@ BINDIR   ?= bin
 INSTDIR  ?= $(PREFIX)/bin
 TESTDIR  ?= tests
 
-SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
+MILKSRCS := $(wildcard $(SRCDIR)/*.c.k)
+MILKINCS := $(wildcard $(SRCDIR)/*.h.k)
+SOURCES  := $(MILKSRCS:%.k=%)
+INCLUDES := $(MILKINCS:%.k=%)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 TARGET   := milky
 
@@ -30,6 +32,7 @@ install: release
 	@mkdir -p $(INSTDIR)
 	@install -m 0775 $(BINDIR)/$(TARGET) $(INSTDIR)
 
+milky: $(SOURCES) $(INCLUDES)
 build: $(BINDIR)/$(TARGET)
 debug: CCFLAGS += -ggdb -D _DEBUG
 debug: build
@@ -48,6 +51,12 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
 	@echo "Compiling $<..."
 	@$(CC) $(CCFLAGS) -c $< -o $@
+
+$(SOURCES): $(INCLUDES)
+$(SOURCES) $(INCLUDES): %: %.k
+	@echo "Compiling $< to $@..."
+	@$(MILKYC) -o $@ $<
+	@printf '\n'
 
 $(TEST_OBJECTS): $(OBJDIR)/%.o: $(TESTDIR)/%.c
 	@mkdir -p `dirname $@`
