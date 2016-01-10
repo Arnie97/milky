@@ -96,6 +96,12 @@ clean:
 distclean: clean
 	@rm -rv $(BINDIR) || true
 
+bootstrap:
+	@wget -N https://github.com/Arnie97/milky/archive/bootstrap.tar.gz
+	@tar -xzvf bootstrap.tar.gz
+	@cd milky-bootstrap; make install
+	@rm -rf milky-bootstrap
+
 # $(call make-depend,source-file,object-file,depend-file)
 define make-depend
 	$(CC) -MM -MP -MT $2 -MF $3 $(CCFLAGS) $1
