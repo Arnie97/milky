@@ -22,7 +22,7 @@ MILKINCS := $(wildcard $(SRCDIR)/*.h.k)
 SOURCES  := $(MILKSRCS:%.k=%)
 INCLUDES := $(MILKINCS:%.k=%)
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-DUMMIES  := $(MILKSRCS:%.k=$(LCOVDIR)/%)
+DUMMIES  := $(MILKSRCS:%.k=$(OBJDIR)/%)
 
 TESTALL  := $(wildcard $(TESTDIR)/*.milk $(TESTDIR)/*.k)
 TESTCC   := $(wildcard $(TESTDIR)/*.c.k)
@@ -39,9 +39,12 @@ coverage: CCFLAGS += -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += -lgcov
 coverage: test
 
+gcov: coverage $(DUMMIES)
+	@gcov -o $(OBJDIR) -s $(OBJDIR) $(DUMMIES)
+
 lcov: coverage $(DUMMIES)
 	@mkdir -p $(LCOVDIR)
-	@lcov -c -d $(OBJDIR) -b $(LCOVDIR) -o $(LCOVDIR)/$(LCOVFILE)
+	@lcov -c -d $(OBJDIR) -b $(OBJDIR) -o $(LCOVDIR)/$(LCOVFILE)
 	@genhtml --legend $(LCOVDIR)/$(LCOVFILE) -o $(LCOVDIR)
 
 install: release
@@ -74,8 +77,8 @@ $(SOURCES) $(INCLUDES): %: %.k
 	@$(MILKYC) -o $@ $<
 	@printf '\n'
 
-$(DUMMIES): $(LCOVDIR)/%: %.k
-	@mkdir -p $(LCOVDIR)/$(SRCDIR)
+$(DUMMIES): $(OBJDIR)/%: %.k
+	@mkdir -p $(OBJDIR)/$(SRCDIR)
 	@cp $< $@
 
 $(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
