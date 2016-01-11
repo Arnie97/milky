@@ -10,6 +10,7 @@ jmp_buf exception
 
 
 void throw(int error_code, char *message, Token *token):
+    "Report an error and leave the current file."
     if token:
         int scanned = 0
         char *cursor = line

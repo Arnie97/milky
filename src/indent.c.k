@@ -16,6 +16,7 @@ size_t strlen_i(const int *s)
 
 
 static void get_escaped(Token *token):
+    "Recognize colons in ?: operators and line breaks in brackets."
     static int ternary_expressions, unclosed_brackets
     switch:
         token->kind
@@ -38,6 +39,7 @@ static void get_escaped(Token *token):
 
 
 static inline void next_token(Token *token, char force_look_ahead):
+    "Fetch a token from the look-ahead queue."
     if !force_look_ahead && look_ahead_tokens->size:
         dequeue(look_ahead_tokens, token)
     else:
@@ -46,10 +48,13 @@ static inline void next_token(Token *token, char force_look_ahead):
 
 
 static inline void store_token(Token *token):
+    "Push a token into the look-ahead queue."
     enqueue(look_ahead_tokens, *token)
 
 
 void get_indent(Token *token):
+    "Analyze indent changes,
+        then insert (un)indent tokens into the token stream."
     static char settled_by, indent_just_changed
     static int indent_settled, current_indent
     static int indents[MAX_INDENTATION_LEVEL] = { 0 }
@@ -175,6 +180,7 @@ void get_indent(Token *token):
 
 
 void look_ahead_queue(char action):
+    "Create or destroy the look-ahead queue."
     if action == INIT:
         look_ahead_tokens = init()
     else:
@@ -182,6 +188,7 @@ void look_ahead_queue(char action):
 
 
 int *strchr_i(register const int *s, int c):
+    "Standard library 'strchr' for int arrays."
     repeat *s++:
         if *s == c:
             return (int *)s
@@ -189,6 +196,7 @@ int *strchr_i(register const int *s, int c):
 
 
 size_t strlen_i(const int *s):
+    "Standard library 'strlen' for int arrays."
     size_t i = -1
     while s[++i]:
         pass

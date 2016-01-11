@@ -16,6 +16,7 @@ static unsigned int line_start_pos, row
 
 
 int get_token(Token *token):
+    "Split the input stream into different types of tokens."
     int pos_in_token = 0
     char last_char, current_char, next_char, escaped
 
@@ -189,6 +190,7 @@ int get_token(Token *token):
 
 
 void get_whitespace(Token *token, int pos_in_token):
+    "Meld white-space characters into the previous token."
     char current_char
     while (current_char = line[line_pos]) != '\0':
         if pos_in_token >= MAX_TOKEN_SIZE:

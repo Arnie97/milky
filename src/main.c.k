@@ -14,6 +14,8 @@ jmp_buf exception
 
 
 static inline size_t file_size(FILE *fp):
+    "Return length of the specified file in bytes,
+        and rewind it to the beginning."
     fseek(fp, 0, SEEK_END)
     size_t size = ftell(fp)
     rewind(fp)
@@ -21,6 +23,8 @@ static inline size_t file_size(FILE *fp):
 
 
 static size_t shebang_size(FILE *fp, size_t file_size):
+    "If the file begins with shebang,
+        return the size of its first line. Otherwise, return zero."
     size_t shebang
     if getc(fp) == '#' && getc(fp) == '!':
         shebang = 2
@@ -32,6 +36,8 @@ static size_t shebang_size(FILE *fp, size_t file_size):
 
 
 static void load_file(FILE *fp):
+    "Load the specified file into heap memory,
+        but skip the shebang line, if it exists."
     line_pos = 1
 
     size_t size = file_size(fp)
@@ -53,6 +59,7 @@ static void load_file(FILE *fp):
 
 
 static void open_file(const char *input_name, const char *output_name):
+    "Create input and output handles by file names."
     dprintf(("%s >> %s\n", input_name, output_name))
     FILE *fp_in = fopen(input_name, "r")
     if !fp_in:
@@ -81,6 +88,7 @@ static void open_file(const char *input_name, const char *output_name):
 
 
 int main(int argc, char *argv[]):
+    "Parse command line options."
     int files_count = 0
     char is_option = 1, *output_name = NULL, *name_ext
 

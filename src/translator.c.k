@@ -44,6 +44,7 @@ static inline void store_token(Token *token):
 
 
 void parse_file(void):
+    "Initialize the translator."
     Token token
     context = -1
     TranslatorStatus status = PREPROCESSOR
@@ -64,6 +65,7 @@ static void parse_statement(
     BlockStatus *block,
     void *label
 ):
+    "Parse statements in the same block, and add proper semicolons."
     Token temp
     for ;;:
         parse_expression(0)
@@ -161,6 +163,7 @@ static void parse_block(
     TranslatorStatus status,
     void *label
 ):
+    "Process an indented block or an inline block."
     int new_label = 0
     char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
@@ -349,6 +352,7 @@ static void parse_block(
 
 
 static inline int parse_expression(char options):
+    "Print and count untouched tokens."
     int token_count = 0
     Token token
     for ;;:

@@ -6,7 +6,7 @@ ifeq ($(OS),Windows_NT)
 CC       := gcc
 endif
 CC       ?= gcc
-CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch
+CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -Wno-unused-value
 MILKYC   ?= milky
 
 PREFIX   ?= /usr/local
