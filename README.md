@@ -9,6 +9,7 @@ As its name suggests, the syntax of milky is heavily based on indentations, and 
 It is also inspired by Ruby, Go, Swift and many other programming languages.
 
 Let's have a look at some examples. The following is a milky version of the famous [FizzBuzz Test](http://c2.com/cgi/wiki?FizzBuzzTest):
+
 ```c
 #include <stdio.h>
 #include <stdbool.h>
@@ -30,17 +31,38 @@ int main(void):
 
 If you are new to milky, you can begin with a piece of C source code - basically, add proper indentations and colons, then remove redundant parentheses, braces and semicolons, and now you've got some code in milky.
 
-For more examples on syntax details, you can check the source code of milky compiler - it's also written in milky!
+For more examples on syntax details, don't forget the [source code](src) of milky compiler - it's also written in milky!
 
 
 #### Build
 As mentioned, the milky compiler is fully written in milky language itself.
-Hence you'll need a copy of compiled milky compiler (version `0.13.6+`) to bootstrap the latest milky.
+Hence we'll need C toolchain and a copy of compiled milky compiler (version `0.13.6+`) to bootstrap the latest milky.
 
+To build from scratch, you may build a milky compiler from the 'bootstrap' branch:
 
-#### Getting started
-Assume that you've already installed milky to somewhere in your `$PATH`:
 ```bash
+$ git clone https://github.com/Arnie97/milky
+$ cd milky
+$ git checkout bootstrap
+$ make
+$ sudo make install
+```
+
+Or, simply execute `sudo make bootstrap` to build from Github archive.
+
+Then we can get back to the latest milky source:
+
+```bash
+$ git checkout master
+$ make
+$ sudo make install
+```
+
+
+#### Naming Conventions
+Assume that you've already installed milky in your `$PATH`:
+
+```c
 $ cat > hello.c.k << EOF
 #include <stdio.h>
 int main(int argc, char *argv[]):
@@ -66,7 +88,8 @@ As you can see, multiple inputs can be specified at the same time, hence the des
 Milky outputs are designed to be as similar to the corresponding inputs as possible.
 Match on the line level is strictly guaranteed, which is useful when working with other tools, such as GDB or Gcov.
 
-Taking [hello.c.k above](#getting-started) and Gcov as an example:
+Taking [hello.c.k above](#naming-conventions) and Gcov as an example:
+
 ```bash
 $ milky hello.c.k
 $ gcc --coverage -o hello hello.c   # generates hello.gcno
