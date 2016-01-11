@@ -1,6 +1,6 @@
-.PHONY: test coverage lcov
+.PHONY: test coverage dummy gcov lcov
 .PHONY: install milky build debug release
-.PHONY: clean distclean testclean
+.PHONY: clean srcclean distclean testclean
 
 ifeq ($(OS),Windows_NT)
 CC       := gcc
@@ -38,11 +38,12 @@ test: $(TESTSRCS) $(TESTASMS)
 coverage: CCFLAGS += -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += -lgcov
 coverage: test
+dummy: $(DUMMIES)
 
-gcov: coverage $(DUMMIES)
+gcov: coverage dummy
 	@gcov -o $(OBJDIR) -s $(OBJDIR) $(DUMMIES)
 
-lcov: coverage $(DUMMIES)
+lcov: coverage dummy
 	@mkdir -p $(LCOVDIR)
 	@lcov -c -d $(OBJDIR) -b $(OBJDIR) -o $(LCOVDIR)/$(LCOVFILE)
 	@genhtml --legend $(LCOVDIR)/$(LCOVFILE) -o $(LCOVDIR)
@@ -90,11 +91,17 @@ $(TESTSRCS): %: %.k build
 	@$(BINDIR)/$(TARGET) $<
 	@printf '\n'
 
-clean:
-	@rm -rv $(OBJDIR) $(LCOVDIR) $(SOURCES) $(INCLUDES) $(TESTSRCS) || true
+clean: srcclean testclean
+	@rm -rv $(OBJDIR) $(LCOVDIR) || true
 
-distclean: clean
+srcclean:
+	@rm -rv $(SOURCES) $(INCLUDES) || true
+
+distclean:
 	@rm -rv $(BINDIR) || true
+
+testclean:
+	@rm -rv $(TESTSRCS) || true
 
 bootstrap:
 	@wget -N https://github.com/Arnie97/milky/archive/bootstrap.tar.gz
