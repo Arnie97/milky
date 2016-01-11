@@ -1,18 +1,17 @@
 language:
   - c
 
-compiler:
-  - gcc
-  - clang
-
 matrix:
   include:
+    - compiler: gcc
+      env: CODECOV='1.6.3'
     - compiler: gcc
       env: CC='gcc-5'
     - compiler: gcc
       env: CC='i686-w64-mingw32-gcc'
     - compiler: gcc
       env: CC='x86_64-w64-mingw32-gcc'
+    - compiler: clang
 
 before_install:
   - if [ "$CC" = 'gcc-5' ]; then
@@ -33,6 +32,9 @@ install:
   - if [ "$CC" = 'x86_64-w64-mingw32-gcc' ]; then
       sudo apt-get -q install gcc-mingw-w64-x86-64;
     fi
+  - if [ -n "$CODECOV" ]; then
+      sudo pip install codecov;
+    fi
 
 before_script:
   - sudo make bootstrap
@@ -41,4 +43,20 @@ script:
   - make test
 
 after_success:
+  - if [ -n "$CODECOV" ]; then
+      make clean;
+      make coverage;
+      bin/milky src/*.k;
+      make dummy;
+      rm -rf src;
+      mv obj/src ./;
+      wget "https://github.com/codecov/codecov-python/archive/v${CODECOV}.tar.gz";
+      tar -xzvf v${CODECOV}.tar.gz;
+      export CODECOV=codecov-python-${CODECOV}/codecov/__init__.py;
+      sed -i "s:\(write('==> \)\(Upload\)\(ing')\):\1Overwrit\3;\
+        reports = re.sub('(src[#/]'\
+        '\\\\\\\\\w+\\\\\\\\.c)(?\!\\\\\\\\.k)', '\\\\\\\\1.k', \
+        reports);\1\2\3:" ${CODECOV};
+      python ${CODECOV} --gcov-args '-o obj';
+    fi
   - make distclean
