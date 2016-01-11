@@ -20,15 +20,31 @@ static inline size_t file_size(FILE *fp):
     return size
 
 
+static size_t shebang_size(FILE *fp, size_t file_size):
+    size_t shebang
+    if getc(fp) == '#' && getc(fp) == '!':
+        shebang = 2
+        while getc(fp) != '\n' && shebang < file_size:
+            shebang++
+    else:
+        shebang = 0
+    return shebang
+
+
 static void load_file(FILE *fp):
     line_pos = 1
 
     size_t size = file_size(fp)
+    size_t shebang = shebang_size(fp, size)
+    dprintf(("file length %u, including shebang %u", size, shebang))
+    size -= shebang
+
     line = malloc(2 + size + 1 + 3)
     if !line:
         throw(3, "Insufficient memory", NULL)
 
     line[0] = line[1] = '\n'
+    fseek(fp, shebang, SEEK_SET)
     fread(&line[2], size, 1, fp)
     if line[++size] != '\n':
         line[++size] = '\n'
