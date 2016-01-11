@@ -9,10 +9,10 @@
 
 #define MAX_INDENTATION_LEVEL (20)
 
-Queue *look_ahead_tokens
+static Queue *look_ahead_tokens
 
-int *strchr_i(register const int *s, int c)
-size_t strlen_i(const int *s)
+static int *strchr_i(const int *s, int c)
+static size_t strlen_i(const int *s)
 
 
 static void get_escaped(Token *token):
@@ -67,7 +67,7 @@ void get_indent(Token *token):
 
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
             current_indent = strrchr(token->str, '\n') - token->str + 1
-            current_indent = strlen(token->str) - current_indent / sizeof(char)
+            current_indent = strlen(token->str) - current_indent
             if first_new_line:
                 first_new_line = 0
             else:
@@ -187,7 +187,7 @@ void look_ahead_queue(char action):
         destroy(look_ahead_tokens)
 
 
-int *strchr_i(register const int *s, int c):
+static inline int *strchr_i(register const int *s, int c):
     "Standard library 'strchr' for int arrays."
     repeat *s++:
         if *s == c:
@@ -195,7 +195,7 @@ int *strchr_i(register const int *s, int c):
     return NULL
 
 
-size_t strlen_i(const int *s):
+static inline size_t strlen_i(const int *s):
     "Standard library 'strlen' for int arrays."
     size_t i = -1
     while s[++i]:

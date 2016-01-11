@@ -117,7 +117,7 @@ int main(int argc, char *argv[]):
                 throw(7, "File format not recognized", NULL)
 
             elif !output_name: // output file name not specified
-                output_name = calloc(strlen(file_name), sizeof(char))
+                output_name = malloc(strlen(file_name))
                 if !output_name:
                     throw(3, "Insufficient memory", NULL)
                 else:
