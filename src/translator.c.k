@@ -50,13 +50,16 @@ void parse_file(void):
     TranslatorStatus status = PREPROCESSOR
     BlockStatus block = UNKNOWN_BLOCK
     srand(RAND_MAX)
-    look_ahead_queue(INIT)
+    if !setjmp(exception):
+        look_ahead_queue(INIT)
+    else:
+        look_ahead_queue(DESTROY)
+        return
     dputs("start!")
     for ;;:
         dprintf(("\033[32m[TL46]\033[0m"))
         int new_label = 0
         parse_statement(&token, &status, &block, &new_label)
-    look_ahead_queue(DESTROY)
 
 
 static void parse_statement(

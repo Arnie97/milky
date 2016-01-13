@@ -10,7 +10,6 @@
 int line_pos
 char *line = NULL, *file_name = "milky"
 FILE *output
-jmp_buf exception
 
 
 static inline size_t file_size(FILE *fp):
@@ -78,9 +77,7 @@ static void open_file(const char *input_name, const char *output_name):
 #else
         output = fp_out
 #endif
-        if !setjmp(exception):
-            parse_file()
-            dputs("Never here!")
+        parse_file()
         fclose(fp_out)
     return
 
