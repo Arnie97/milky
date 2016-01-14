@@ -380,12 +380,17 @@ static inline int parse_expression(char options):
                 fputs(token.str, output)
                 continue
 
-        case INDENT_TOKEN, UNINDENT_TOKEN, \
-                KEYWORD_TOKEN, COLON_TOKEN, END_OF_FILE_TOKEN:
+        case KEYWORD_TOKEN:
+            if token.type == 11: // pass
+                continue
+            else:
+                goto exit
+
+        case INDENT_TOKEN, UNINDENT_TOKEN, COLON_TOKEN, END_OF_FILE_TOKEN:
             goto exit
 
         case GOTO_TAG_TOKEN:
-            fputc(':', output); // => -> :
+            fputc(':', output) // => -> :
             fputs(token.str + 2, output)
             continue
 

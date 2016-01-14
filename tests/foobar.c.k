@@ -52,8 +52,8 @@ comment */  switch:
 /* weird! */    printf("foo is unknown\n")
             foo += bar
     elif /* more weird */ foo != /* baka */ 9:
-        for int i = 0;i < 10;++i:
-            printf("%d ", i)
+        for pass; bar; bar--:
+            printf("%d ", bar)
     else:
         if bar == 2:
             puts("bar == 2")
