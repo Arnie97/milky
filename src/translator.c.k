@@ -151,7 +151,9 @@ static void parse_statement(
             return
 
         case END_OF_FILE_TOKEN:
-            throw(9, "Well done.", NULL)
+            free(line)
+            line = NULL
+            longjmp(exception, 0)
 
         case COLON_TOKEN:
             store_token(token)

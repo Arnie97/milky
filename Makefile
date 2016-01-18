@@ -76,7 +76,6 @@ $(SOURCES): $(INCLUDES)
 $(SOURCES) $(INCLUDES): %: %.k
 	@echo "Compiling $< to $@..."
 	@$(MILKYC) -o $@ $<
-	@printf '\n'
 
 $(DUMMIES): $(OBJDIR)/%: %.k
 	@mkdir -p $(OBJDIR)/$(SRCDIR)
@@ -89,7 +88,6 @@ $(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
 $(TESTSRCS): %: %.k build
 	@echo "Testing $<..."
 	@$(BINDIR)/$(TARGET) $<
-	@printf '\n'
 
 clean: srcclean testclean
 	@rm -rv $(OBJDIR) $(LCOVDIR) || true
