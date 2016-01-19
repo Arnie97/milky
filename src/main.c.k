@@ -57,7 +57,7 @@ static void load_file(FILE *fp):
         line[++size] = '\0'
 
 
-static void open_file(const char *input_name, const char *output_name):
+static int open_file(const char *input_name, const char *output_name):
     "Create input and output handles by file names."
     dprintf(("%s >> %s\n", input_name, output_name))
     FILE *fp_in = fopen(input_name, "r")
@@ -77,16 +77,16 @@ static void open_file(const char *input_name, const char *output_name):
 #else
         output = fp_out
 #endif
-        parse_file()
+        int i = parse_file()
         fclose(fp_out)
-    return
+        return i
 
     handler => throw(2, "Unable to open specified file", NULL)
 
 
 int main(int argc, char *argv[]):
     "Parse command line options."
-    int files_count = 0
+    int files_count = 0, first_err = 0
     char is_option = 1, *output_name = NULL, *name_ext
 
     for int i = 0; i < argc; i++:
@@ -119,11 +119,11 @@ int main(int argc, char *argv[]):
                     throw(3, "Insufficient memory", NULL)
                 else:
                     strncpy(output_name, file_name, name_ext - file_name)
-                    open_file(file_name, output_name)
+                    first_err = first_err || open_file(file_name, output_name)
                     free(output_name)
 
             else: // output file name specified
-                open_file(file_name, output_name)
+                first_err = first_err || open_file(file_name, output_name)
 
             dputs("File processed.")
             output_name = NULL
@@ -132,4 +132,4 @@ int main(int argc, char *argv[]):
     if files_count == 0:
         throw(1, "No input files", NULL)
     else:
-        return 0
+        return first_err

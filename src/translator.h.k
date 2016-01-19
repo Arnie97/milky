@@ -24,6 +24,6 @@ enum BlockStatus:
     ENUM_BLOCK,
     STRUCT_BLOCK
 
-void parse_file(void)
+int parse_file(void)
 
 #endif /* TRANSLATOR_H_INCLUDED */

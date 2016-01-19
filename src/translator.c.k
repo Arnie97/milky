@@ -43,18 +43,21 @@ static inline void store_token(Token *token):
     look_ahead_token[look_ahead_count++] = *token
 
 
-void parse_file(void):
+int parse_file(void):
     "Initialize the translator."
     Token token
     context = -1
     TranslatorStatus status = PREPROCESSOR
     BlockStatus block = UNKNOWN_BLOCK
     srand(RAND_MAX)
-    if !setjmp(exception):
+
+    int env = setjmp(exception)
+    if !env:
         look_ahead_queue(INIT)
     else:
         look_ahead_queue(DESTROY)
-        return
+        return env
+
     dputs("start!")
     for ;;:
         dprintf(("\033[32m[TL46]\033[0m"))
