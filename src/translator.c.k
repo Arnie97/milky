@@ -56,7 +56,7 @@ int parse_file(void):
         look_ahead_queue(INIT)
     else:
         look_ahead_queue(DESTROY)
-        return env
+        return env > 0? env: EXIT_SUCCESS
 
     dputs("start!")
     for ;;:
@@ -156,7 +156,7 @@ static void parse_statement(
         case END_OF_FILE_TOKEN:
             free(line)
             line = NULL
-            longjmp(exception, 0)
+            longjmp(exception, -1)
 
         case COLON_TOKEN:
             store_token(token)
