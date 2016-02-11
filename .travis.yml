@@ -6,11 +6,11 @@ matrix:
     - compiler: gcc
       env: CODECOV='1.6.3'
     - compiler: gcc
-      env: CC='gcc-5'
+      env: COMPILER='gcc-5'
     - compiler: gcc
-      env: CC='i686-w64-mingw32-gcc'
+      env: COMPILER='i686-w64-mingw32-gcc'
     - compiler: gcc
-      env: CC='x86_64-w64-mingw32-gcc'
+      env: COMPILER='x86_64-w64-mingw32-gcc'
     - compiler: clang
 
 addons:
@@ -35,9 +35,17 @@ install:
 before_script:
   - make PREFIX=~ bootstrap
   - export MILKYC=~/bin/milky
+  - if [ -n "$COMPILER" ]; then
+      export CC="$COMPILER";
+      $CC --version;
+    fi
 
 script:
-  - make test
+  - if [[ "$CC" =~ 'mingw' ]]; then
+      make TARGET=milky-${CC}.exe release;
+    else
+      make test;
+    fi
 
 after_success:
   - if [ -n "$CODECOV" ]; then

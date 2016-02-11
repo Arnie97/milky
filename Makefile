@@ -29,8 +29,8 @@ TESTCC   := $(wildcard $(TESTDIR)/*.c.k)
 TESTSRCS := $(TESTALL:%.k=%)
 TESTASMS := $(TESTCC:$(TESTDIR)/%.c.k=$(OBJDIR)/%.s)
 
-TARGET   := milky
-LCOVFILE := coverage.run
+TARGET   ?= milky
+LCOVFILE ?= coverage.run
 
 test: $(TESTSRCS) $(TESTASMS)
 	@echo "All tests passed! Congratulations!"
