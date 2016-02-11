@@ -42,7 +42,8 @@ before_script:
 
 script:
   - if [[ "$CC" =~ 'mingw' ]]; then
-      make TARGET=milky-${CC}.exe release;
+      export TARGET=milky-${CC%-gcc}.exe;
+      make release;
     else
       make test;
     fi
@@ -64,4 +65,13 @@ after_success:
         reports);\1\2\3:" ${CODECOV};
       python ${CODECOV} --gcov-args '-o obj';
     fi
-  - make distclean
+
+deploy:
+  provider: releases
+  api_key:
+    secure: SgSoNQnZWLn5hp80hNpuP9mVRwWvGQauTZi6ISflme33IykeMdn4F2/dhLeogAn6HmzrLXqZPn5rKLEaD5nfm5f7q9uc5ztLyPuMA0j3hknpUHHLFOU8QKMNYEsY71Af1crOU4PTjxxAi8vJAaas1u+JnWqzspoxXxuxGGG2fbY=
+  skip_cleanup: true
+  file: bin/$TARGET
+  on:
+    tags: true
+    condition: $TARGET
