@@ -63,7 +63,11 @@ comment */  switch:
             pass
         repeat foo > 0:
             foo -= bar
-        printf("foo: %d, bar: %d\n", foo, bar)
+        printf(
+            "foo: %d, bar: %d\n", /* comment across
+lines */foo, // line comment in parentheses
+            bar
+                )
     return 0
 
 typedef int element

@@ -138,10 +138,9 @@ static void parse_statement(
                 store_token(&temp)
                 return
             elif temp.kind == END_OF_LINE_TOKEN:
+                if token->type < 0 && temp.type == 0:
+                    fputc(';', output)
                 temp.type = 5
-
-            if token->type < 0:
-                fputc(';', output)
             fputs(token->str, output)
             store_token(&temp)
 
