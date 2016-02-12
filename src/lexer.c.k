@@ -111,6 +111,9 @@ int get_token(Token *token):
             if next_char == '\n':
                 line_pos++
                 continue
+            else:
+                append
+                throw(13, "Malformed escape sequence", token)
         case '-':
             if next_char == '>':
                 token->kind = OPERATOR_TOKEN
