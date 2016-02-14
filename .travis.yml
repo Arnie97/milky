@@ -7,22 +7,29 @@ matrix:
       env: CODECOV='1.6.3'
     - compiler: gcc
       env: COMPILER='gcc-5'
+      addons:
+        apt:
+          sources: ubuntu-toolchain-r-test
+          packages: gcc-5
     - compiler: gcc
-      env: COMPILER='i686-w64-mingw32-gcc'
+      env:
+        - COMPILER='i686-w64-mingw32-gcc'
+        - UPX='3.91'
+      addons:
+        apt:
+          packages:
+            - gcc-mingw-w64-i686
+            - binutils-mingw-w64-i686
     - compiler: gcc
-      env: COMPILER='x86_64-w64-mingw32-gcc'
+      env:
+        - COMPILER='x86_64-w64-mingw32-gcc'
+        - UPX='3.91'
+      addons:
+        apt:
+          packages:
+            - gcc-mingw-w64-x86-64
+            - binutils-mingw-w64-x86-64
     - compiler: clang
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-5
-      - gcc-mingw-w64-i686
-      - binutils-mingw-w64-i686
-      - gcc-mingw-w64-x86-64
-      - binutils-mingw-w64-x86-64
 
 install:
   - if [ "$CC" = 'clang' ]; then
@@ -64,6 +71,15 @@ after_success:
         '\\\\\\\\\w+\\\\\\\\.c)(?\!\\\\\\\\.k)', '\\\\\\\\1.k', \
         reports);\1\2\3:" ${CODECOV};
       python ${CODECOV} --gcov-args '-o obj';
+    fi
+
+before_deploy:
+  - if [ -n "$UPX" ]; then
+      export UPX=upx-${UPX}-amd64_linux;
+      wget "http://upx.sourceforge.net/download/${UPX}.tar.bz2";
+      tar --strip-components=1 -xjvf ${UPX}.tar.bz2 ${UPX}/upx;
+      unset UPX;
+      ./upx bin/$TARGET;
     fi
 
 deploy:
