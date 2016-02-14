@@ -20,7 +20,7 @@ int get_token(Token *token):
     int pos_in_token = 0
     char last_char, current_char, next_char, escaped
 
-    token->kind = END_OF_FILE_TOKEN
+    token->family = END_OF_FILE_TOKEN
     token->row = row
     token->column = line_pos - line_start_pos
     token->type = -1
@@ -36,9 +36,9 @@ int get_token(Token *token):
                 row++
                 line_start_pos = line_pos
                 switch:
-                    token->kind
+                    token->family
                 case STRING_TOKEN:
-                    token->kind = MULTILINE_STRING_TOKEN
+                    token->family = MULTILINE_STRING_TOKEN
                     fallthrough
                 case MULTILINE_STRING_TOKEN:
                     if escaped:
@@ -48,11 +48,11 @@ int get_token(Token *token):
                         token->str[pos_in_token++] = 'n'
                         token->str[pos_in_token++] = '\\'
                 case BLOCK_COMMENT_TOKEN:
-                    token->kind = MULTILINE_COMMENT_TOKEN
+                    token->family = MULTILINE_COMMENT_TOKEN
                 case MULTILINE_COMMENT_TOKEN:
                     pass
                 default:
-                    token->kind = END_OF_LINE_TOKEN
+                    token->family = END_OF_LINE_TOKEN
                     token->type = (last_char == '\\') // escaped new line
                     append
                     retpos
@@ -61,13 +61,13 @@ int get_token(Token *token):
         append
 
         switch:
-            token->kind
+            token->family
         case CHAR_TOKEN, STRING_TOKEN, MULTILINE_STRING_TOKEN:
             if escaped:
                 escaped = 0
             elif current_char == '\\':
                 escaped = 1
-            elif token->kind == CHAR_TOKEN:
+            elif token->family == CHAR_TOKEN:
                 if current_char == '\'':
                     retpos
             elif current_char == '"':
@@ -86,10 +86,10 @@ int get_token(Token *token):
             switch:
                 next_char
             case '/':
-                token->kind = LINE_COMMENT_TOKEN
+                token->family = LINE_COMMENT_TOKEN
                 continue
             case '*':
-                token->kind = BLOCK_COMMENT_TOKEN
+                token->family = BLOCK_COMMENT_TOKEN
                 continue
 
         if isalnum(current_char) || current_char == '_':
@@ -98,10 +98,10 @@ int get_token(Token *token):
             token->str[pos_in_token] = '\0'
             for int t = sizeof(keywords) / sizeof(char *) - 1; t >= 0; t--:
                 if strcmp(token->str, keywords[t]) == 0:
-                    token->kind = KEYWORD_TOKEN
+                    token->family = KEYWORD_TOKEN
                     token->type = t
                     retpos
-            token->kind = IDENTIFIER_TOKEN
+            token->family = IDENTIFIER_TOKEN
             retpos
         subtract
 
@@ -116,37 +116,37 @@ int get_token(Token *token):
                 throw(13, "Malformed escape sequence", token)
         case '-':
             if next_char == '>':
-                token->kind = OPERATOR_TOKEN
+                token->family = OPERATOR_TOKEN
                 append
                 current_char = next_char
             else:
                 fallthrough
         case '+':
             if current_char == next_char:
-                token->kind = ASSIGNMENT_TOKEN
+                token->family = ASSIGNMENT_TOKEN
                 append
                 // current_char = next_char
             else:
                 fallthrough
         case '&', '|':
             if current_char == next_char:
-                token->kind = OPERATOR_TOKEN
+                token->family = OPERATOR_TOKEN
                 append
                 // current_char = next_char
             else:
                 fallthrough
         case '*', '/', '^', '%':
             if next_char == '=':
-                token->kind = ASSIGNMENT_TOKEN
+                token->family = ASSIGNMENT_TOKEN
                 append
                 current_char = next_char
             else:
                 fallthrough
         case '~':
-            token->kind = OPERATOR_TOKEN
+            token->family = OPERATOR_TOKEN
         case '=':
             if next_char == '>':
-                token->kind = GOTO_TAG_TOKEN
+                token->family = GOTO_TAG_TOKEN
                 append
                 current_char = next_char
             else:
@@ -154,37 +154,37 @@ int get_token(Token *token):
         case '!', '<', '>':
             if next_char != '=':
                 if current_char == '=':
-                    token->kind = ASSIGNMENT_TOKEN
+                    token->family = ASSIGNMENT_TOKEN
                     break
                 elif current_char == '!':
-                    token->kind = OPERATOR_TOKEN
+                    token->family = OPERATOR_TOKEN
                     break
                 elif current_char == next_char:
-                    token->kind = OPERATOR_TOKEN
+                    token->family = OPERATOR_TOKEN
                     append
                     // current_char = next_char
                     break
             else:
                 append
                 current_char = next_char
-            token->kind = COMPARISON_TOKEN
+            token->family = COMPARISON_TOKEN
         case ':':
             if current_char == next_char:
-                token->kind = SCOPE_TOKEN
+                token->family = SCOPE_TOKEN
                 append
                 // current_char = next_char
             else:
                 fallthrough
         case '(', ')', '[', ']', '{', '}', '.', ',', '#', '?', ';':
-            token->kind = current_char
+            token->family = current_char
         case '\'':
             escaped = 0
-            token->kind = CHAR_TOKEN
+            token->family = CHAR_TOKEN
             append
             continue
         case '\"':
             escaped = 0
-            token->kind = STRING_TOKEN
+            token->family = STRING_TOKEN
             append
             continue
         append

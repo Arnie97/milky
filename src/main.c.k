@@ -41,7 +41,7 @@ static void load_file(FILE *fp):
 
     size_t size = file_size(fp)
     size_t shebang = shebang_size(fp, size)
-    dprintf(("file length %u, including shebang %u", size, shebang))
+    dprintf((WHITE, "file length %u, including shebang %u\n", size, shebang))
     size -= shebang
 
     line = malloc(2 + size + 1 + 3)
@@ -59,7 +59,7 @@ static void load_file(FILE *fp):
 
 static int open_file(const char *input_name, const char *output_name):
     "Create input and output handles by file names."
-    dprintf(("%s >> %s\n", input_name, output_name))
+    dprintf((BRIGHT + YELLOW, "%s >> %s: ", input_name, output_name))
     FILE *fp_in = fopen(input_name, "r")
     if !fp_in:
         goto handler
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]):
             else: // output file name specified
                 first_err = first_err || open_file(file_name, output_name)
 
-            dputs("File processed.")
+            dprintf((BRIGHT + YELLOW, "File processed.\n"))
             output_name = NULL
             files_count++
 

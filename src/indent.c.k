@@ -19,7 +19,7 @@ static void get_escaped(Token *token):
     "Recognize colons in ?: operators and line breaks in brackets."
     static int ternary_expressions, unclosed_brackets
     switch:
-        token->kind
+        token->family
     case '(', '[', '{':
         unclosed_brackets++
     case ')', ']', '}':
@@ -29,13 +29,13 @@ static void get_escaped(Token *token):
     case ':':
         if ternary_expressions:
             ternary_expressions--
-            token->kind = ESCAPED_COLON_TOKEN
+            token->family = ESCAPED_COLON_TOKEN
     case END_OF_LINE_TOKEN:
         if unclosed_brackets:
-            token->type = 2
+            token->type = IN_BRACKETS
     case MULTILINE_COMMENT_TOKEN:
         if unclosed_brackets:
-            token->kind = BLOCK_COMMENT_TOKEN
+            token->family = BLOCK_COMMENT_TOKEN
 
 
 static inline void next_token(Token *token, char force_look_ahead):
@@ -63,7 +63,7 @@ void get_indent(Token *token):
     while !indent_settled:
         next_token(token, 1)
         hell => switch:
-            token->kind
+            token->family
 
         case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
             current_indent = strrchr(token->str, '\n') - token->str + 1
@@ -71,7 +71,7 @@ void get_indent(Token *token):
             if first_new_line:
                 first_new_line = 0
             else:
-                token->kind = BLOCK_COMMENT_TOKEN
+                token->family = BLOCK_COMMENT_TOKEN
             store_token(token)
             continue
 
@@ -84,7 +84,7 @@ void get_indent(Token *token):
             if first_new_line:
                 first_new_line = 0
             else:
-                token->type = 3
+                token->type = REDUNDANT_LINE
 
         case LINE_COMMENT_TOKEN:
             token->type = 1
@@ -94,16 +94,16 @@ void get_indent(Token *token):
 
         case SHARP_TOKEN:
             while (
-                !(token->kind == END_OF_LINE_TOKEN && !token->type) &&
-                token->kind != MULTILINE_COMMENT_TOKEN &&
-                token->kind != END_OF_FILE_TOKEN
+                !(token->family == END_OF_LINE_TOKEN && !token->type) &&
+                token->family != MULTILINE_COMMENT_TOKEN &&
+                token->family != END_OF_FILE_TOKEN
             ):
-                if token->kind == KEYWORD_TOKEN:
-                    token->kind = IDENTIFIER_TOKEN
+                if token->family == KEYWORD_TOKEN:
+                    token->family = IDENTIFIER_TOKEN
                 store_token(token)
                 next_token(token, 1)
 
-            if token->kind == END_OF_FILE_TOKEN:
+            if token->family == END_OF_FILE_TOKEN:
                 fallthrough
             else:
                 first_new_line = 1
@@ -125,10 +125,11 @@ void get_indent(Token *token):
     int indent_levels = strlen_i(indents)
     int last_indent = indent_levels? indents[indent_levels - 1]: 0
     int indent_change = current_indent - last_indent
+
     if indent_change > 0:
-        token->kind = INDENT_TOKEN
+        token->family = INDENT_TOKEN
         token->str[0] = '\0'
-        dprintf(("\033[32m[IN %d->%d]\033[0m", last_indent, current_indent))
+        dprintf((BRIGHT + GREEN, "[i%d->%d]", last_indent, current_indent))
         indents[indent_levels] = current_indent
 
         token->type = settled_by
@@ -138,19 +139,19 @@ void get_indent(Token *token):
         return
 
     if indent_change < 0:
-        token->kind = UNINDENT_TOKEN
+        token->family = UNINDENT_TOKEN
         token->str[0] = '\0'
         if !strchr_i(indents, current_indent):
             throw(22, "Unindent does not match any outer indentation level", token)
-        dprintf(("\033[33m[UN %d->%d]\033[0m", last_indent, current_indent))
+        dprintf((BRIGHT + RED, "[u%d->%d]", last_indent, current_indent))
         indents[indent_levels - 1] = 0
 
         if indents[indent_levels - 2] == current_indent:
             token->type = settled_by
             settled_by = 0
         else:
-            token->type = 0
-            dputs("\033[33m[CLIFF]\033[0m")
+            token->type = PASS
+            dprintf((RED, "[cliff]"))
 
         indent_just_changed = 1
         return
@@ -159,17 +160,17 @@ void get_indent(Token *token):
     if look_ahead_tokens->size:
         next_token(token, 0)
         if indent_just_changed:
-            if token->kind == END_OF_LINE_TOKEN:
-                token->type = 4
+            if token->family == END_OF_LINE_TOKEN:
+                token->type = INDENT_CHANGED
             else:
-                token->kind = BLOCK_COMMENT_TOKEN
+                token->family = BLOCK_COMMENT_TOKEN
             indent_just_changed = 0
         return
 
     // indent settled before
     next_token(token, 0)
     switch:
-        token->kind
+        token->family
     case END_OF_LINE_TOKEN:
         if !token->type:
             fallthrough

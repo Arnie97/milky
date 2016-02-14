@@ -1,7 +1,8 @@
 #ifndef TOKEN_H_INCLUDED
 #define TOKEN_H_INCLUDED
 
-enum TokenKind:
+// token families
+enum TokenFamily:
     IDENTIFIER_TOKEN,
     KEYWORD_TOKEN,
     CHAR_TOKEN,
@@ -33,12 +34,34 @@ enum TokenKind:
     SEMICOLON_TOKEN = ';',
     SHARP_TOKEN = '#'
 
+// token types
+#define IF              0x00
+#define ELIF            0x01
+#define ELSE            0x02
+#define FOR             0x03
+#define DO              0x04
+#define WHILE           0x05
+#define REPEAT          0x06
+#define SWITCH          0x07
+#define CASE            0x08
+#define DEFAULT         0x09
+#define FALLTHROUGH     0x0a
+#define PASS            0x0b
+#define ENUM            0x0c
+#define STRUCT          0x0d
+#define UNION           0x0e
+
+#define NORMAL_LINE     0x00
+#define LITERAL_ESCAPE  0x01
+#define IN_BRACKETS     0x02
+#define REDUNDANT_LINE  0x03
+#define INDENT_CHANGED  0x04
+#define BEFORE_COMMENT  0x05
 
 #define MAX_TOKEN_SIZE (4096)
 
-
 struct Token:
-    TokenKind kind
+    TokenFamily family
     char type
     char str[MAX_TOKEN_SIZE]
     unsigned int row, column

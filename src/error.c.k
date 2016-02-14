@@ -10,7 +10,6 @@
 
 #include "input.h"
 #include "token.h"
-#include "color.h"
 #include "error.h"
 
 jmp_buf exception
