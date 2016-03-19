@@ -114,11 +114,13 @@ int main(int argc, char *argv[]):
                 throw(7, "File format not recognized", NULL)
 
             elif !output_name: // output file name not specified
-                output_name = malloc(strlen(file_name))
+                size_t output_name_length = name_ext - file_name
+                output_name = malloc(output_name_length + 1)
                 if !output_name:
                     throw(3, "Insufficient memory", NULL)
                 else:
-                    strncpy(output_name, file_name, name_ext - file_name)
+                    strncpy(output_name, file_name, output_name_length)
+                    output_name[output_name_length] = '\0'
                     first_err = first_err || open_file(file_name, output_name)
                     free(output_name)
 
