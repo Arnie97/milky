@@ -12,11 +12,11 @@ char *line = NULL, *file_name = "milky"
 FILE *output
 
 
-static inline size_t file_size(FILE *fp):
+static inline long file_size(FILE *fp):
     "Return length of the specified file in bytes,
         and rewind it to the beginning."
     fseek(fp, 0, SEEK_END)
-    size_t size = ftell(fp)
+    long size = ftell(fp)
     rewind(fp)
     return size
 
@@ -38,19 +38,33 @@ static void load_file(FILE *fp):
     "Load the specified file into heap memory,
         but skip the shebang line, if it exists."
     line_pos = 1
+    long size = file_size(fp)
 
-    size_t size = file_size(fp)
-    size_t shebang = shebang_size(fp, size)
-    dprintf((WHITE, "file length %u, including shebang %u\n", size, shebang))
-    size -= shebang
+    // stream is not a file, so we can only read it by chunk
+    if size == -1:
+        size = 0
+        size_t bytes_read
+        repeat bytes_read == BUFFER_SIZE:
+            line = realloc(line, 2 + size + BUFFER_SIZE + 1 + 3)
+            if !line:
+                throw(3, "Insufficient memory", NULL)
+            bytes_read = fread(&line[2 + size], BUFFER_SIZE, 1, fp)
+            size += BUFFER_SIZE
+        size += bytes_read - BUFFER_SIZE
 
-    line = malloc(2 + size + 1 + 3)
-    if !line:
-        throw(3, "Insufficient memory", NULL)
+    // stream is a file, so we can get its size and read it as a whole
+    else:
+        size_t shebang = shebang_size(fp, size)
+        dprintf((WHITE, "file length %u, including shebang %u\n", size, shebang))
+        size -= shebang
+
+        line = malloc(2 + size + 1 + 3)
+        if !line:
+            throw(3, "Insufficient memory", NULL)
+        fseek(fp, shebang, SEEK_SET)
+        fread(&line[2], size, 1, fp)
 
     line[0] = line[1] = '\n'
-    fseek(fp, shebang, SEEK_SET)
-    fread(&line[2], size, 1, fp)
     if line[++size] != '\n':
         line[++size] = '\n'
     for int i = 0; i < 3; i++:
@@ -59,27 +73,37 @@ static void load_file(FILE *fp):
 
 static int open_file(const char *input_name, const char *output_name):
     "Create input and output handles by file names."
-    dprintf((BRIGHT + YELLOW, "%s >> %s: ", input_name, output_name))
-    FILE *fp_in = fopen(input_name, "r")
-    if !fp_in:
-        goto handler
-    else:
+    int parsing_error
+    FILE *fp_in, *fp_out
+
+#ifdef _DEBUG
+    dprintf((
+        BRIGHT + YELLOW, "%s >> %s: ",
+        input_name?  input_name:  "<stdin>",
+        output_name? output_name: "<stdout>"
+    ))
+    output_name = NULL
+#endif
+
+    if !input_name:
+        load_file(stdin)
+    elif (fp_in = fopen(input_name, "r")):
         load_file(fp_in)
         fclose(fp_in)
-
-    FILE *fp_out = fopen(output_name, "w")
-    if !fp_out:
+    else:
         goto handler
 
-    else:
-#ifdef _DEBUG
+    if !output_name:
         output = stdout
-#else
+        parsing_error = parse_file()
+    elif (fp_out = fopen(output_name, "w")):
         output = fp_out
-#endif
-        int i = parse_file()
+        parsing_error = parse_file()
         fclose(fp_out)
-        return i
+    else:
+        goto handler
+
+    return parsing_error
 
     handler => throw(2, "Unable to open specified file", NULL)
 
@@ -89,22 +113,34 @@ int main(int argc, char *argv[]):
     int files_count = 0, first_err = 0
     char is_option = 1, *output_name = NULL, *name_ext
 
-    for int i = 0; i < argc; i++:
-        if is_option && strcmp(argv[i], "--"): // separator before file names
-            is_option = 0
+    for int i = 1; i < argc; i++:
+        // treat argument as an option
+        if is_option && argv[i][0] == '-' && argv[i][1] != '\0':
 
-        elif argv[i][0] == '-': // treat argument as an option
-            if strcmp(argv[i], "-o") == 0:
+            // it could be a separator between options and file names
+            if !strcmp(argv[i], "--"):
+                is_option = 0
+
+            // or, specifying output path for the next given input
+            elif !strcmp(argv[i], "-o") || !strcmp(argv[i], "--output"):
                 if ++i >= argc:
                     throw(4, "Missing filename after '-o'", NULL)
                 elif output_name:
                     throw(5, "Cannot specify multiple output files", NULL)
                 else:
                     output_name = argv[i]
+
             else:
                 throw(6, "Unrecognized option", NULL)
 
-        else: // treat argument as a file name
+        // otherwise, treat argument as an input
+            continue
+
+        // specifying stdin as input
+        if argv[i][0] == '-' && argv[i][1] == '\0':
+            file_name = NULL
+
+        else:
             file_name = argv[i]
             name_ext = strrchr(file_name, '.')
             if (
@@ -113,23 +149,28 @@ int main(int argc, char *argv[]):
             ):
                 throw(7, "File format not recognized", NULL)
 
-            elif !output_name: // output file name not specified
-                size_t output_name_length = name_ext - file_name
-                output_name = malloc(output_name_length + 1)
-                if !output_name:
-                    throw(3, "Insufficient memory", NULL)
-                else:
-                    strncpy(output_name, file_name, output_name_length)
-                    output_name[output_name_length] = '\0'
-                    first_err = first_err || open_file(file_name, output_name)
-                    free(output_name)
+        // output file name isn't specified, but input is
+        // thus generate an output file name by removing the '.k' suffix
+        if file_name && !output_name:
+            size_t output_name_length = name_ext - file_name
+            output_name = malloc(output_name_length + 1)
+            if !output_name:
+                throw(3, "Insufficient memory", NULL)
+            strncpy(output_name, file_name, output_name_length)
+            output_name[output_name_length] = '\0'
+            first_err = first_err || open_file(file_name, output_name)
+            free(output_name)
 
-            else: // output file name specified
-                first_err = first_err || open_file(file_name, output_name)
+        // in other cases, it's unnecessary or unable to deduce an output name
+        else:
+            // stdout specified as output
+            if output_name && output_name[0] == '-' && output_name[1] == '\0':
+                output_name = NULL
+            first_err = first_err || open_file(file_name, output_name)
 
-            dprintf((BRIGHT + YELLOW, "File processed.\n"))
-            output_name = NULL
-            files_count++
+        dprintf((BRIGHT + YELLOW, "File processed.\n"))
+        output_name = NULL
+        files_count++
 
     if files_count == 0:
         throw(1, "No input files", NULL)
