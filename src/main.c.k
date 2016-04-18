@@ -111,7 +111,7 @@ static int open_file(const char *input_name, const char *output_name):
 int main(int argc, char *argv[]):
     "Parse command line options."
     int files_count = 0, first_err = 0
-    char is_option = 1, *output_name = NULL, *name_ext
+    char is_option = 1, force_process = 0, *output_name = NULL, *name_ext
 
     for int i = 1; i < argc; i++:
         // treat argument as an option
@@ -121,12 +121,16 @@ int main(int argc, char *argv[]):
             if !strcmp(argv[i], "--"):
                 is_option = 0
 
+            // or, forcing a file with suffixes other than '.k' to be processed
+            elif !strcmp(argv[i], "-f") || !strcmp(argv[i], "--force"):
+                force_process = 1
+
             // or, specifying output path for the next given input
             elif !strcmp(argv[i], "-o") || !strcmp(argv[i], "--output"):
                 if ++i >= argc:
                     throw(4, "Missing filename after '-o'", NULL)
                 elif output_name:
-                    throw(5, "Cannot specify multiple output files", NULL)
+                    throw(5, "Cannot specify multiple outputs for an input", NULL)
                 else:
                     output_name = argv[i]
 
@@ -147,7 +151,10 @@ int main(int argc, char *argv[]):
                 !name_ext ||
                 (strcmp(name_ext, ".milk") && strcmp(name_ext, ".k"))
             ):
-                throw(7, "File format not recognized", NULL)
+                if !force_process:
+                    throw(7, "File format not recognized", NULL)
+                elif !output_name:
+                    throw(8, "Output path must be explicitly specified", NULL)
 
         // output file name isn't specified, but input is
         // thus generate an output file name by removing the '.k' suffix
@@ -169,6 +176,7 @@ int main(int argc, char *argv[]):
             first_err = first_err || open_file(file_name, output_name)
 
         dprintf((BRIGHT + YELLOW, "File processed.\n"))
+        force_process = 0
         output_name = NULL
         files_count++
 
