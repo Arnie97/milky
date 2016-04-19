@@ -21,54 +21,56 @@ static inline long file_size(FILE *fp):
     return size
 
 
-static size_t shebang_size(FILE *fp, size_t file_size):
-    "If the file begins with shebang,
-        return the size of its first line. Otherwise, return zero."
-    size_t shebang
-    if getc(fp) == '#' && getc(fp) == '!':
-        shebang = 2
-        while getc(fp) != '\n' && shebang < file_size:
-            shebang++
-    else:
-        shebang = 0
-    return shebang
-
-
 static void load_file(FILE *fp):
     "Load the specified file into heap memory,
         but skip the shebang line, if it exists."
-    line_pos = 1
-    long size = file_size(fp)
+    long size = file_size(fp), shebang_size = 0
+
+    // read the first two characters
+    line = malloc(2 + 2) // "\n\n" "#!"
+    line[0] = line[1] = '\n'
+    line_pos = fread(&line[2], 1, 2, fp)
+
+    // check and skip shebang
+    if line_pos == 2 && line[2] == '#' && line[3] == '!':
+        int c
+        shebang_size = 2 // strlen("#!")
+        repeat c != '\n' && c != EOF:
+            shebang_size++
+            c = getc(fp)
+        if c == '\n':
+            line[2] = '\n'
+            line_pos = 1
+        else:
+            line_pos = 0
 
     // stream is not a file, so we can only read it by chunk
     if size == -1:
-        size = 0
-        size_t bytes_read
+        dprintf((WHITE, "stream including shebang %ld\n", shebang_size))
+        long bytes_read
         repeat bytes_read == BUFFER_SIZE:
-            line = realloc(line, 2 + size + BUFFER_SIZE + 1 + 3)
+            line = realloc(line, 2 + line_pos + BUFFER_SIZE + 1 + 3)
             if !line:
                 throw(3, "Insufficient memory", NULL)
-            bytes_read = fread(&line[2 + size], BUFFER_SIZE, 1, fp)
-            size += BUFFER_SIZE
-        size += bytes_read - BUFFER_SIZE
+            bytes_read = fread(&line[2 + line_pos], 1, BUFFER_SIZE, fp)
+            line_pos += BUFFER_SIZE
+        size = line_pos - BUFFER_SIZE + bytes_read
 
     // stream is a file, so we can get its size and read it as a whole
     else:
-        size_t shebang = shebang_size(fp, size)
-        dprintf((WHITE, "file length %u, including shebang %u\n", size, shebang))
-        size -= shebang
-
-        line = malloc(2 + size + 1 + 3)
+        dprintf((WHITE, "file length %ld, including shebang %ld\n", size, shebang_size))
+        size -= shebang_size
+        line = realloc(line, 2 + size + 1 + 3)
         if !line:
             throw(3, "Insufficient memory", NULL)
-        fseek(fp, shebang, SEEK_SET)
-        fread(&line[2], size, 1, fp)
+        fread(&line[2 + line_pos], 1, size - line_pos, fp)
 
-    line[0] = line[1] = '\n'
+    // terminate the buffer with "\n\0\0\0"
     if line[++size] != '\n':
         line[++size] = '\n'
     for int i = 0; i < 3; i++:
         line[++size] = '\0'
+    line_pos = 1
 
 
 static int open_file(const char *input_name, const char *output_name):
