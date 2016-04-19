@@ -88,3 +88,10 @@ void throw(int error_code, char *message, Token *token):
     // runtime error
     else:
         exit(error_code)
+
+
+void *alloc(void *p, size_t size):
+    p = realloc(p, size)
+    if !p:
+        throw(3, "Insufficient memory", NULL)
+    return p

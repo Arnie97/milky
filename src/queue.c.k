@@ -2,6 +2,7 @@
 
 #include "token.h"
 #include "queue.h"
+#include "error.h"
 
 #define isempty(queue) (!(queue->front || queue->rear || queue->size))
 

@@ -10,9 +10,12 @@
     #define dprintf(x)
 #endif
 
+#define malloc(size) alloc(NULL, size)
+
 extern jmp_buf exception
 
 int cprintf(int color, const char *format, ...)
 void throw(int error_code, char *message, Token *token)
+void *alloc(void *p, size_t size)
 
 #endif /* ERROR_H_INCLUDED */

@@ -49,9 +49,7 @@ static void load_file(FILE *fp):
         dprintf((WHITE, "stream including shebang %ld\n", shebang_size))
         long bytes_read
         repeat bytes_read == BUFFER_SIZE:
-            line = realloc(line, 2 + line_pos + BUFFER_SIZE + 1 + 3)
-            if !line:
-                throw(3, "Insufficient memory", NULL)
+            line = alloc(line, 2 + line_pos + BUFFER_SIZE + 1 + 3)
             bytes_read = fread(&line[2 + line_pos], 1, BUFFER_SIZE, fp)
             line_pos += BUFFER_SIZE
         size = line_pos - BUFFER_SIZE + bytes_read
@@ -60,9 +58,7 @@ static void load_file(FILE *fp):
     else:
         dprintf((WHITE, "file length %ld, including shebang %ld\n", size, shebang_size))
         size -= shebang_size
-        line = realloc(line, 2 + size + 1 + 3)
-        if !line:
-            throw(3, "Insufficient memory", NULL)
+        line = alloc(line, 2 + size + 1 + 3)
         fread(&line[2 + line_pos], 1, size - line_pos, fp)
 
     // terminate the buffer with "\n\0\0\0"
@@ -163,8 +159,6 @@ int main(int argc, char *argv[]):
         if file_name && !output_name:
             size_t output_name_length = name_ext - file_name
             output_name = malloc(output_name_length + 1)
-            if !output_name:
-                throw(3, "Insufficient memory", NULL)
             strncpy(output_name, file_name, output_name_length)
             output_name[output_name_length] = '\0'
             first_err = first_err || open_file(file_name, output_name)
