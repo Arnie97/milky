@@ -103,11 +103,13 @@ main(int argc, char *argv[])
             ) {
                 throw(7, "File format not recognized", NULL);
             } else if (!output_name) { // output file name not specified
-                output_name = calloc(strlen(file_name), sizeof(char));
+                size_t output_name_length = name_ext - file_name;
+                output_name = malloc(output_name_length + 1);
                 if (!output_name) {
                     throw(3, "Insufficient memory", NULL);
                 } else {
-                    strncpy(output_name, file_name, name_ext - file_name);
+                    strncpy(output_name, file_name, output_name_length);
+                    output_name[output_name_length] = '\0';
                     open_file(file_name, output_name);
                     free(output_name);
                 }
