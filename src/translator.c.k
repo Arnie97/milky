@@ -296,9 +296,14 @@ static void parse_block(
                     fputc('{', output)
 
                 if parse_expression(0x1 | 0x2 | 0x4):
-                    status = INLINE_STATEMENT
-                    fputc('}', output)
-                    return
+                    status = INLINE_BLOCK
+                    Token temp = {
+                        .family = UNINDENT_TOKEN,
+                        .row = token->row,
+                        .column = token->column,
+                        .type = PASS
+                    }
+                    store_token(&temp)
 
         case INDENT_TOKEN:
             if status != BEFORE_INDENT:
