@@ -20,10 +20,12 @@ int get_token(Token *token):
     int pos_in_token = 0
     char last_char, current_char, next_char, escaped
 
-    token->family = END_OF_FILE_TOKEN
-    token->row = row
-    token->column = line_pos - line_start_pos
-    token->type = -1
+    *token = (Token) {
+        .family = END_OF_FILE_TOKEN,
+        .row = row,
+        .column = line_pos - line_start_pos,
+        .type = -1
+    }
 
     while (current_char = line[line_pos]) != '\0':
         last_char = line[line_pos - 1]
