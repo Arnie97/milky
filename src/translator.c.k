@@ -64,6 +64,16 @@ int parse_file(void):
         parse_statement(&token, &status, &block, &new_label)
 
 
+static void struct_magic(const char *p, const char *q):
+    "Append 'struct' before a self-referential field."
+    #define isempty(x) (isspace(*(x)) || *(x) == '\0')
+    while !isempty(p) && !isempty(q):
+        if *p++ != *q++:
+            return
+    if isempty(p) && isempty(q):
+        fputs("struct ", output)
+
+
 static void parse_statement(
     Token *token,
     TranslatorStatus *status,
@@ -79,14 +89,8 @@ static void parse_statement(
 
         case IDENTIFIER_TOKEN:
             if *block == STRUCT_BLOCK:
-                #define isempty(x) (isspace(*(x)) || *(x) == '\0')
-                char *p = label, *q = token->str
-                while !isempty(p) && !isempty(q):
-                    if *p++ != *q++:
-                        goto hell
-                if isempty(p) && isempty(q):
-                    fputs("struct ", output)
-            hell => fputs(token->str, output)
+                struct_magic(label, token->str)
+            fputs(token->str, output)
 
         case KEYWORD_TOKEN:
             switch:
@@ -297,6 +301,15 @@ static void parse_block(
 
                 if parse_expression(0x1 | 0x2 | 0x4):
                     status = INLINE_BLOCK
+
+                    switch:
+                        next_token(token)->family
+
+                    case IDENTIFIER_TOKEN:
+                        if block == STRUCT_BLOCK:
+                            struct_magic(label, token->str)
+                        fputs(token->str, output)
+
                     Token temp = {
                         .family = UNINDENT_TOKEN,
                         .row = token->row,
