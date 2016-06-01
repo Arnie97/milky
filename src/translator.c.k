@@ -172,7 +172,7 @@ static void parse_block(
     TranslatorStatus status,
     void *label
 ):
-    "Process an indented block or an inline block."
+    "Process an indented block."
     int new_label = 0
     char type_name[MAX_TOKEN_SIZE]
     BlockStatus block = UNKNOWN_BLOCK
@@ -299,24 +299,8 @@ static void parse_block(
                 default:
                     fputc('{', output)
 
-                if parse_expression(0x1 | 0x2 | 0x4):
-                    status = INLINE_BLOCK
-
-                    switch:
-                        next_token(token)->family
-
-                    case IDENTIFIER_TOKEN:
-                        if block == STRUCT_BLOCK:
-                            struct_magic(label, token->str)
-                        fputs(token->str, output)
-
-                    Token temp = {
-                        .family = UNINDENT_TOKEN,
-                        .row = token->row,
-                        .column = token->column,
-                        .type = PASS
-                    }
-                    store_token(&temp)
+                if parse_expression(0x1 | 0x4):
+                    throw(33, "Expected indent", token)
 
         case INDENT_TOKEN:
             if status != BEFORE_INDENT:

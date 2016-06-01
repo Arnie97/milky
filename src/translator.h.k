@@ -6,7 +6,6 @@ enum TranslatorStatus:
     AFTER_KEYWORD,
     BEFORE_COLON,
     BEFORE_INDENT,
-    INLINE_BLOCK,
     BEFORE_UNINDENT,
     PREPROCESSOR
 
