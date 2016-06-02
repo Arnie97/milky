@@ -17,7 +17,7 @@ int base64_magic(Token *token, int len):
     token_str[pos_in_token++] = '_'
     token_str[pos_in_token++] = '_'
 
-    int size = pos_in_token + (len / 3 * 4 + len % 3 + 2) + 1
+    int size = pos_in_token + (len / 3 * 4 + len % 3 + 2) * 2 + 1
     if size >= MAX_TOKEN_SIZE:
         throw(13, "Non-ascii token too long", token)
 
@@ -43,8 +43,11 @@ static void base64_split(const char *str):
 
 static inline void base64_encode(const unsigned char *chunks, int len):
     "Convert three bytes into four base64 characters."
+
+    // there're only 63 valid characters [A-Za-z0-9_],
+    // hence we have to use escape sequences to avoid conflicts.
     static const char base64_alphabet[] = \
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\0\1"
 
     // reshape an 3 * 8 array into an 4 * 6 array
     int encoded[4] = {
@@ -57,8 +60,10 @@ static inline void base64_encode(const unsigned char *chunks, int len):
     // translate characters with the alphabet
     for int i = 0; i <= len; i++:
         char c = base64_alphabet[encoded[i]]
-        if c == '-':
+
+        // 0x3e maps onto escape sequence "_0", and 0x3f "_1"
+        if c < '0':
             token_str[pos_in_token++] = '_'
-            token_str[pos_in_token++] = '_'
+            token_str[pos_in_token++] = '0' + c
         else:
             token_str[pos_in_token++] = c
