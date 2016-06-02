@@ -4,6 +4,7 @@
 
 #include "input.h"
 #include "token.h"
+#include "base64.h"
 #include "keyword.h"
 #include "error.h"
 #include "lexer.h"
@@ -11,6 +12,9 @@
 #define append { token->str[pos_in_token++] = current_char; line_pos++; }
 #define subtract { token->str[--pos_in_token] = '\0'; line_pos--; }
 #define retpos { return pos_in_token; }
+
+#define isextended(c) ((c) & 0x80)
+#define isalnum_ex(c) (isalnum(c) || (c) == '_' || isextended(c))
 
 static unsigned int line_start_pos, row
 
@@ -94,16 +98,22 @@ int get_token(Token *token):
                 token->family = BLOCK_COMMENT_TOKEN
                 continue
 
-        if isalnum(current_char) || current_char == '_':
-            if isalnum(next_char) || next_char == '_':
+        if isalnum_ex(current_char):
+            if isextended(current_char):
+                token->type = 0
+            if isalnum_ex(next_char):
                 continue
+
+            token->family = IDENTIFIER_TOKEN
             token->str[pos_in_token] = '\0'
+            if !token->type: // include non-ascii characters
+                return base64_magic(token, pos_in_token)
+
             for int t = sizeof(keywords) / sizeof(char *) - 1; t >= 0; t--:
                 if strcmp(token->str, keywords[t]) == 0:
                     token->family = KEYWORD_TOKEN
                     token->type = t
                     retpos
-            token->family = IDENTIFIER_TOKEN
             retpos
         subtract
 
