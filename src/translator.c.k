@@ -289,7 +289,7 @@ static void parse_block(
                 case CASE_BLOCK, DEFAULT_BLOCK:
                     label = &new_label
                     fputs(token->str, output)
-                    fputc(';', output) // declaration magic
+                    fputc('{', output)
                 case STRUCT_BLOCK:
                     label = &type_name
                     fputc('{', output)
@@ -339,13 +339,16 @@ static void parse_block(
             case CASE_BLOCK:
                 if token->type == CASE || token->type == DEFAULT:
                     context = 1
-                    fputs("break;", output)
+                    fputs("} break;", output)
                     if new_label:
                         fprintf(output, " _fallthrough_%x: ;", new_label)
                 elif new_label:
                     throw(39, "Expected 'case' or 'default' after 'fallthrough'", token)
                 else:
                     fallthrough
+            case DEFAULT_BLOCK:
+                fputc('}', output)
+                fallthrough
             default:
                 fputc('}', output)
             return
