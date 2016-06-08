@@ -8,6 +8,7 @@ endif
 CC       ?= gcc
 CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -Wno-unused-value
 MILKYC   ?= milky
+SHELL    := bash
 
 PREFIX   ?= /usr/local
 SRCDIR   ?= src
