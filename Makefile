@@ -86,8 +86,16 @@ $(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
 	@$(CC) $(CCFLAGS) -S -c $< -o $@
 
 $(TESTSRCS): %: %.k build
-	@echo "Testing $<..."
-	@$(BINDIR)/$(TARGET) $<
+	@file=$(notdir $<); \
+	exit_status=$${file%%[^0-9]*}; \
+	if [ $$exit_status ]; then \
+		echo "Testing $< (expected error $$exit_status)..."; \
+		$(BINDIR)/$(TARGET) $<; \
+		[ $$? -eq $$exit_status ]; \
+	else \
+		echo "Testing $<..."; \
+		$(BINDIR)/$(TARGET) $<; \
+	fi
 
 clean: srcclean testclean
 	@rm -rv $(OBJDIR) $(LCOVDIR) || true
