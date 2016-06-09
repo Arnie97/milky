@@ -108,7 +108,7 @@ static int open_file(const char *input_name, const char *output_name):
 
 int main(int argc, char *argv[]):
     "Parse command line options."
-    int files_count = 0, first_err = 0
+    int files_count = 0, first_err = 0, current_err
     char is_option = 1, force_process = 0, *output_name = NULL, *name_ext
 
     for int i = 1; i < argc; i++:
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]):
             output_name = malloc(output_name_length + 1)
             strncpy(output_name, file_name, output_name_length)
             output_name[output_name_length] = '\0'
-            first_err = first_err || open_file(file_name, output_name)
+            current_err = open_file(file_name, output_name)
             free(output_name)
 
         // in other cases, it's unnecessary or unable to deduce an output name
@@ -169,7 +169,10 @@ int main(int argc, char *argv[]):
             // stdout specified as output
             if output_name && output_name[0] == '-' && output_name[1] == '\0':
                 output_name = NULL
-            first_err = first_err || open_file(file_name, output_name)
+            current_err = open_file(file_name, output_name)
+
+        if !first_err && current_err:
+            first_err = current_err
 
         dprintf((BRIGHT + YELLOW, "File processed.\n"))
         force_process = 0
