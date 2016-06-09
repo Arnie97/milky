@@ -277,30 +277,30 @@ static void parse_block(
         case COLON_TOKEN:
             if status != BEFORE_COLON:
                 throw(36, "Unexpected colons", token)
-            else:
-                status = BEFORE_INDENT
-                switch:
-                    block
-                case REPEAT_BLOCK:
-                    fprintf(output, "){ _repeat_%x: ", new_label)
-                case SWITCH_BLOCK:
-                    fputc('(', output)
-                    continue
-                case CASE_BLOCK, DEFAULT_BLOCK:
-                    label = &new_label
-                    fputs(token->str, output)
-                    fputc('{', output)
-                case STRUCT_BLOCK:
-                    label = &type_name
-                    fputc('{', output)
-                case IF_BLOCK, ELIF_BLOCK, WHILE_BLOCK:
-                    fputc(')', output)
-                    fallthrough
-                default:
-                    fputc('{', output)
+            status = BEFORE_INDENT
 
-                if parse_expression(0x1 | 0x4):
-                    throw(33, "Expected indent", token)
+            switch:
+                block
+            case REPEAT_BLOCK:
+                fprintf(output, "){ _repeat_%x: ", new_label)
+            case SWITCH_BLOCK:
+                fputc('(', output)
+                continue
+            case CASE_BLOCK, DEFAULT_BLOCK:
+                label = &new_label
+                fputs(token->str, output)
+                fputc('{', output)
+            case STRUCT_BLOCK:
+                label = &type_name
+                fputc('{', output)
+            case IF_BLOCK, ELIF_BLOCK, WHILE_BLOCK:
+                fputc(')', output)
+                fallthrough
+            default:
+                fputc('{', output)
+
+            if parse_expression(0x1 | 0x4):
+                throw(33, "Expected indent", token)
 
         case INDENT_TOKEN:
             if status != BEFORE_INDENT:
@@ -309,7 +309,10 @@ static void parse_block(
             parse_statement(token, &status, &block, label)
 
         case UNINDENT_TOKEN:
+            if status != BEFORE_UNINDENT:
+                throw(32, "Unexpected unindent", token)
             dprintf((RED, "[@%d]", __LINE__))
+
             if token->type < 0:
                 token->type ^= 0x80
                 status = PREPROCESSOR
