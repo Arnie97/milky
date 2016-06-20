@@ -2,11 +2,8 @@
 .PHONY: install milky build debug release
 .PHONY: clean srcclean distclean testclean
 
-ifeq ($(OS),Windows_NT)
-CC       := gcc
-endif
 CC       ?= gcc
-CCFLAGS  += -std=c99 -pedantic -Wall -Wno-switch -Wno-unused-value
+CFLAGS   += -std=c99 -pedantic -Wall -Wno-switch -Wno-unused-value
 MILKYC   ?= milky
 SHELL    := bash
 
@@ -36,7 +33,7 @@ LCOVFILE ?= coverage.run
 test: $(TESTSRCS) $(TESTASMS)
 	@echo "All tests passed! Congratulations!"
 
-coverage: CCFLAGS += -fprofile-arcs -ftest-coverage
+coverage: CFLAGS  += -fprofile-arcs -ftest-coverage
 coverage: LDFLAGS += -lgcov
 coverage: test
 dummy: $(DUMMIES)
@@ -55,9 +52,9 @@ install: release
 
 milky: $(SOURCES) $(INCLUDES)
 build: $(BINDIR)/$(TARGET)
-debug: CCFLAGS += -ggdb -D _DEBUG
+debug: CFLAGS += -ggdb -D _DEBUG
 debug: build
-release: CCFLAGS += -O3 -s
+release: CFLAGS += -O3 -s
 release: build
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
@@ -71,7 +68,7 @@ $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@echo "Generating dependencies for $<..."
 	@$(call make-depend,$<,$@,$(subst .o,.d,$@))
 	@echo "Compiling $<..."
-	@$(CC) $(CCFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 $(SOURCES): $(INCLUDES)
 $(SOURCES) $(INCLUDES): %: %.k
@@ -84,7 +81,7 @@ $(DUMMIES): $(OBJDIR)/%: %.k
 
 $(TESTASMS): $(OBJDIR)/%.s: $(TESTDIR)/%.c
 	@echo "Compiling test output $<..."
-	@$(CC) $(CCFLAGS) -S -c $< -o $@
+	@$(CC) $(CFLAGS) -S -c $< -o $@
 
 $(TESTSRCS): %: %.k build
 	@file=$(notdir $<); \
@@ -118,5 +115,5 @@ bootstrap:
 
 # $(call make-depend,source-file,object-file,depend-file)
 define make-depend
-	$(CC) -MM -MP -MT $2 -MF $3 $(CCFLAGS) $1
+	$(CC) -MM -MP -MT $2 -MF $3 $(CFLAGS) $1
 endef
