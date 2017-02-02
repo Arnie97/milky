@@ -1,2 +1,5 @@
 bin
 obj
+src/*.[ch]
+tests/[0-9]*[^k]
+tests/*.c
