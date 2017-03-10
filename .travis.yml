@@ -4,13 +4,13 @@ sudo: false
 matrix:
   include:
     - compiler: gcc
-      env: CODECOV='1.6.3'
+      env: CODECOV='2.0.6'
     - compiler: gcc
-      env: COMPILER='gcc-5'
+      env: COMPILER='gcc-6'
       addons:
         apt:
           sources: ubuntu-toolchain-r-test
-          packages: gcc-5
+          packages: gcc-6
     - compiler: gcc
       env:
         - COMPILER='i686-w64-mingw32-gcc'
@@ -23,7 +23,7 @@ matrix:
     - compiler: gcc
       env:
         - COMPILER='x86_64-w64-mingw32-gcc'
-        - UPX='3.91'
+        - UPX='3.93'
       addons:
         apt:
           packages:
@@ -53,6 +53,8 @@ script:
       make release;
     else
       make test;
+      bin/milky src/*.k;
+      make test;
     fi
 
 after_success:
@@ -75,9 +77,9 @@ after_success:
 
 before_deploy:
   - if [ -n "$UPX" ]; then
-      export UPX=upx-${UPX}-amd64_linux;
-      wget "http://upx.sourceforge.net/download/${UPX}.tar.bz2";
-      tar --strip-components=1 -xjvf ${UPX}.tar.bz2 ${UPX}/upx;
+      export UPX_PATH=upx-${UPX}-amd64_linux;
+      wget "https://github.com/upx/upx/releases/download/v${UPX}/${UPX_PATH}.tar.xz";
+      tar --strip-components=1 -xJvf ${UPX_PATH}.tar.xz ${UPX_PATH}/upx;
       unset UPX;
       ./upx bin/$TARGET;
     fi
