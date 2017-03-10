@@ -34,7 +34,7 @@ static inline Token *next_token(Token *token):
     else:
         get_indent(token)
         if previous == UNINDENT_TOKEN && token->family == UNINDENT_TOKEN:
-            token->type ^= 0x80 // add a semicolon
+            token->type ^= ESCAPE  // add a semicolon
         previous = token->family
     return token
 
@@ -47,7 +47,7 @@ int parse_file(void):
     "Initialize the translator."
     Token token
     context = -1
-    TranslatorStatus status = PREPROCESSOR
+    TranslatorStatus status = INITIAL_STATUS ^ ESCAPE
     BlockStatus block = UNKNOWN_BLOCK
     srand(RAND_MAX)
 
@@ -116,18 +116,18 @@ static void parse_statement(
         case END_OF_LINE_TOKEN, MULTILINE_COMMENT_TOKEN:
             if *status == BEFORE_INDENT:
                 throw(33, "Expected indent", token)
-            elif *status != PREPROCESSOR:
+            elif !(*status & ESCAPE):  // not a preprocessor
                 if *block != ENUM_BLOCK:
                     if token->family != END_OF_LINE_TOKEN || !token->type:
                         fputc(';', output)
             elif token->family == END_OF_LINE_TOKEN && !token->type:
-                *status = INITIAL_STATUS
-                if context == -1: // skip additional newline at BOF
+                *status ^= ESCAPE  // exit preprocessor mode
+                if context == -1:  // skip additional newline at BOF
                     context = 0
                     token->str[0] = '\0'
 
             if next_token(&temp)->family == SHARP_TOKEN:
-                *status = PREPROCESSOR
+                *status ^= ESCAPE  // enter preprocessor mode
             store_token(&temp)
             fallthrough
 
@@ -314,8 +314,8 @@ static void parse_block(
             dprintf((RED, "[@%d]", __LINE__))
 
             if token->type < 0:
-                token->type ^= 0x80
-                status = PREPROCESSOR
+                token->type ^= ESCAPE
+                status ^= ESCAPE  // enter preprocessor mode
             switch:
                 block
             case SWITCH_BLOCK:
@@ -323,7 +323,7 @@ static void parse_block(
             case ENUM_BLOCK:
                 pass
             default:
-                if status != PREPROCESSOR:
+                if !(status & ESCAPE):  // not a preprocessor
                     fputc(';', output)
 
             switch:
@@ -401,7 +401,7 @@ static inline int parse_expression(char options):
             goto exit
 
         case GOTO_TAG_TOKEN:
-            fputc(':', output) // => -> :
+            fputc(':', output)  // => -> :
             fputs(token.str + 2, output)
             continue
 
