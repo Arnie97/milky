@@ -59,7 +59,7 @@ int get_token(Token *token):
                     pass
                 default:
                     token->family = END_OF_LINE_TOKEN
-                    token->type = (last_char == '\\') // escaped new line
+                    token->type = (last_char == '\\')  // escaped new line
                     append
                     retpos
             append
@@ -106,7 +106,7 @@ int get_token(Token *token):
 
             token->family = IDENTIFIER_TOKEN
             token->str[pos_in_token] = '\0'
-            if !token->type: // include non-ascii characters
+            if !token->type:  // include non-ascii characters
                 return base64_magic(token, pos_in_token)
 
             for int t = sizeof(keywords) / sizeof(char *) - 1; t >= 0; t--:

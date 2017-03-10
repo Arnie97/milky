@@ -27,14 +27,14 @@ static void load_file(FILE *fp):
     long size = file_size(fp), shebang_size = 0
 
     // read the first two characters
-    line = malloc(2 + 2) // "\n\n" "#!"
+    line = malloc(2 + 2)  // "\n\n" "#!"
     line[0] = line[1] = '\n'
     line_pos = fread(&line[2], 1, 2, fp)
 
     // check and skip shebang
     if line_pos == 2 && line[2] == '#' && line[3] == '!':
         int c
-        shebang_size = 2 // strlen("#!")
+        shebang_size = 2  // strlen("#!")
         repeat c != '\n' && c != EOF:
             shebang_size++
             c = getc(fp)
@@ -174,10 +174,10 @@ int main(int argc, char *argv[]):
         if !first_err && current_err:
             first_err = current_err
 
-        dprintf((BRIGHT + YELLOW, "File processed.\n"))
         force_process = 0
         output_name = NULL
         files_count++
+        dprintf((BRIGHT + YELLOW, "%d file(s) processed.\n", files_count))
 
     if files_count == 0:
         throw(1, "No input files", NULL)

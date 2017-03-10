@@ -35,7 +35,7 @@ static void base64_split(const char *str):
             base64_encode(chunks, 3)
             i = 0
 
-    if i: // deal with the remainder
+    if i:  // deal with the remainder
         for int j = i; j < 3; j++:
             chunks[j] = '\0'
         base64_encode(chunks, i)

@@ -65,7 +65,7 @@ void get_indent(Token *token):
         hell => switch:
             token->family
 
-        case MULTILINE_COMMENT_TOKEN: // empty line ending with MULTILINE
+        case MULTILINE_COMMENT_TOKEN:  // empty line ending with MULTILINE
             current_indent = strrchr(token->str, '\n') - token->str + 1
             current_indent = strlen(token->str) - current_indent
             if first_new_line:
@@ -75,7 +75,7 @@ void get_indent(Token *token):
             store_token(token)
             continue
 
-        case END_OF_LINE_TOKEN: // empty line too
+        case END_OF_LINE_TOKEN:  // empty line too
             if token->type:
                 throw(21, "Escaping an empty line", token)
             else:

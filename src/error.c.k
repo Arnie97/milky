@@ -91,6 +91,7 @@ void throw(int error_code, char *message, Token *token):
 
 
 void *alloc(void *p, size_t size):
+    "Wrap realloc() to catch exceptions."
     p = realloc(p, size)
     if !p:
         throw(3, "Insufficient memory", NULL)
