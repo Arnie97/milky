@@ -282,7 +282,7 @@ static void parse_block(
             switch:
                 block
             case REPEAT_BLOCK:
-                fprintf(output, "){ _repeat_%x: ", new_label)
+                fprintf(output, "){ _repeat_%x: ;", new_label)
             case SWITCH_BLOCK:
                 fputc('(', output)
                 continue
