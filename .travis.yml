@@ -62,6 +62,7 @@ after_success:
       make clean;
       make coverage;
       bin/milky src/*.k;
+      cat tests/shebang.c.k | bin/milky -o /dev/null -f - --;
       make dummy;
       rm -rf src;
       mv obj/src ./;
