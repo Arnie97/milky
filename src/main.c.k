@@ -75,6 +75,7 @@ static int open_file(const char *input_name, const char *output_name):
     FILE *fp_in, *fp_out
 
 #ifdef _DEBUG
+#define remove(x)
     dprintf((
         BRIGHT + YELLOW, "%s >> %s: ",
         input_name?  input_name:  "<stdin>",
@@ -98,6 +99,8 @@ static int open_file(const char *input_name, const char *output_name):
         output = fp_out
         parsing_error = parse_file()
         fclose(fp_out)
+        if parsing_error:
+            remove(output_name)
     else:
         goto handler
 
