@@ -60,7 +60,7 @@ release: build
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p `dirname $@`
 	@echo "Linking $@..."
-	@$(CC) $(OBJECTS) $(LDFLAGS) -o $@
+	@$(CC) $^ $(LDFLAGS) -o $@
 	@echo "Construction complete."
 
 $(OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c
@@ -96,7 +96,7 @@ $(TESTSRCS): %: %.k build
 	fi
 
 clean: srcclean testclean
-	@rm -rv $(OBJDIR) $(LCOVDIR) || true
+	@rm -rv $(OBJDIR) || true
 
 srcclean:
 	@rm -rv $(SOURCES) $(INCLUDES) || true
